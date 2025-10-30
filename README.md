@@ -49,12 +49,12 @@ In DB table we keep language-specific columns:
 id | name_en | name_uk | name_ru | created_at
 ```
 
-In code we refer to <span style="background-color: #f0f0f0;">@@name</span>. Fieldlingo maps <span style="background-color: #f0f0f0;">@@name → name_{lang}</span> (e.g. <span style="background-color: #f0f0f0;">name_uk</span>) depending on <span style="background-color: #f0f0f0;">Yii::$app->language</span>.
+In code we refer to `@@name`. Fieldlingo maps `@@name → name_{lang}` (e.g. `name_uk`) depending on `Yii::$app->language`.
 
 ## Configure
 Configure
 
-Add to <span style="background-color: #f0f0f0;">params</span> (or any config area) the advActive section (example):
+Add to `params` (or any config area) the advActive section (example):
 
 ```php
 'params' => [
@@ -77,3 +77,107 @@ Add to <span style="background-color: #f0f0f0;">params</span> (or any config are
 
 Make your AR models extend the provided AdvActiveRecord:
 
+```php
+namespace app\models;
+
+use AlexNo\Fieldlingo\Adapters\Yii2\AdvActiveRecord;
+
+class PetType extends AdvActiveRecord
+{
+    public static function tableName()
+    {
+        return 'pet_type';
+    }
+}
+```
+
+Then:
+
+```php
+$model = PetType::findOne(1);
+
+// attribute access
+echo $model->{"@@name"}; // returns name_en / name_uk / name_ru depending on Yii::$app->language
+```
+
+## Usage in queries
+
+```php
+$query = PetType::find()
+    ->select(['id', '@@name'])
+    ->where(['@@name' => 'Cat'])
+    ->orderBy('@@name ASC');
+```
+
+Fieldlingo will convert `@@name` to `name_en/name_uk` based on current language.
+
+## Core design
+
+`Core/Localizer.php` — centralized logic for mapping structured names to real column names.
+
+`Core/Contracts/LocalizerInterface.php` — contract for Localizer implementations.
+
+`Adapters/Yii2/AdvActiveRecord.php` — extends `yii\db\ActiveRecord`, uses trait to handle attribute access.
+
+`Adapters/Yii2/AdvActiveQuery.php` — extends `yii\db\ActiveQuery` and rewrites `select`, `where`, `orderBy`, `groupBy`, and other helpers to localize columns/conditions.
+
+`Adapters/Yii2/AdvActiveDataProvider.php` — adjusts sort attributes and default order.
+
+The core can be reused later for adapters (Laravel Eloquent, Doctrine, plain SQL builders).
+
+## Configuration
+
+Main options:
+
+`localizedPrefixes` (string|array) — prefix(es) used to mark structured names. Default: `@@`.
+
+`defaultLanguage` (string) — fallback language when localized column is missing. Default: `en`.
+
+`isStrict (bool)` — if true throw when localized column missing; if `false` fallback to `defaultLanguage`.
+
+These options may be set globally, per-class (AdvActiveRecord / AdvActiveQuery) or per-model.
+
+## Examples
+
+See `examples/yii2/sample-model.php` and `examples/yii2/sample-query.php` for short, runnable examples.
+
+## Testing
+
+Unit tests in `tests/`. PHPUnit recommended. Example:
+
+```bash
+composer install --dev
+./vendor/bin/phpunit --configuration phpunit.xml
+```
+
+## Contribution
+
+Contributions welcome! Suggested workflow:
+
+ 1. Fork repository.
+
+ 2. Create feature branch.
+
+ 3. Add tests.
+
+ 4. Open pull request.
+
+Please follow PSR-12 and add PHPDoc (English) for public APIs.
+
+## Roadmap
+
+- [x] Core mapping logic.
+- [x] Yii2 integration (ActiveRecord, ActiveQuery, DataProvider).
+- [ ] Laravel Eloquent adapter.
+- [ ] Doctrine/QueryBuilder adapter.
+- [ ] Advanced column patterns: nested access, JSON, relation-aware localization.
+- [ ] Optionally store translation meta in separate table(s) as alternative mode.
+
+## License
+
+MIT. See `LICENSE`.
+
+## Contact
+
+Author: **Oleksandr Nosov**
+Email: alex@4n.com.ua
