@@ -1,0 +1,40 @@
+{
+  "name": "alex-no/field-lingo",
+  "description": "Field-lingo — lightweight library to map structured multi-language column names (e.g. @@name) to localized DB columns, with Yii2 integration and framework-agnostic core.",
+  "type": "library",
+  "keywords": ["i18n", "yii2", "multilingual", "database", "localized", "columns", "fields"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Oleksandr Nosov",
+      "email": "alex@4n.com.ua"
+    }
+  ],
+  "require": {
+    "php": ">=8.0",
+    "yiisoft/yii2": "^2.0"
+  },
+  "suggest": {
+    "alex-no/language-detector": "Recommended for detecting user language automatically; requires its own configuration."
+  },
+  "autoload": {
+    "psr-4": {
+      "AlexNo\\Field-lingo\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "AlexNo\\Field-lingo\\Tests\\": "tests/"
+    }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5 || ^10"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "extra": {
+    "branch-alias": {
+      "dev-main": "1.0-dev"
+    }
+  }
+}
