@@ -137,6 +137,43 @@ Main options:
 
 These options may be set globally, per-class (AdvActiveRecord / AdvActiveQuery) or per-model.
 
+## 🧱 Directory Structure
+
+```css
+field-lingo/
+├─ src/
+│  ├─ Core/
+│  │  ├─ Localizer.php
+│  │  └─ Contracts/
+│  │     ├─ LocalizerInterface.php
+│  │     └─ ConfigInterface.php
+│  └── Adapters/
+│      └─ Yii2/
+│         ├─ AdvActiveRecord.php
+│         ├─ AdvActiveQuery.php
+│         ├─ AdvActiveDataProvider.php
+│         ├─ LocalizedAttributeTrait.php
+│         └─ MissingLocalizedAttributeException.php
+├─ tests/
+│  ├─ unit/
+│  │  ├─ LocalizerTest.php
+│  │  └─ TraitTest.php
+│  └─ bootstrap.php
+├─ examples/
+│  ├─ yii2/
+│  │  ├─ sample-model.php
+│  │  └─ sample-query.php
+│  └─ plain-php/
+│      └─ usage.php
+├─ scripts/
+│  └─ ci/
+│      └─ run-tests.sh
+├─ .gitignore
+├─ LICENSE
+├─ README.md
+└─ composer.json
+```
+
 ## Examples
 
 See `examples/yii2/sample-model.php` and `examples/yii2/sample-query.php` for short, runnable examples.
