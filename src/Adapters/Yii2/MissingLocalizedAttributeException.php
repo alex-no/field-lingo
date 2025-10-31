@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace AlexNo\Fieldlingo\Adapters\Yii2;
+namespace AlexNo\FieldLingo\Adapters\Yii2;
 /**
  * @file MissingLocalizedAttributeException.php - Exception for missing localized attribute.
  * This file is part of LanguageDetector package.

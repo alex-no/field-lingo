@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace AlexNo\Fieldlingo\Adapters\Yii2;
+namespace AlexNo\FieldLingo\Adapters\Yii2;
 /**
  * @file LingoActiveQuery.php - ActiveQuery supporting localized attribute names.
  * Class LingoActiveQuery

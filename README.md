@@ -49,7 +49,7 @@ In DB table we keep language-specific columns:
 id | name_en | name_uk | name_ru | created_at
 ```
 
-In code we refer to `@@name`. Fieldlingo maps `@@name → name_{lang}` (e.g. `name_uk`) depending on `Yii::$app->language`.
+In code we refer to `@@name`. FieldLingo maps `@@name → name_{lang}` (e.g. `name_uk`) depending on `Yii::$app->language`.
 
 ## Configure
 Configure
@@ -59,12 +59,12 @@ Add to `params` (or any config area) the advActive section (example):
 ```php
 'params' => [
     'advActive' => [
-        \AlexNo\Fieldlingo\Adapters\Yii2\AdvActiveRecord::class => [
+        \AlexNo\FieldLingo\Adapters\Yii2\AdvActiveRecord::class => [
             'localizedPrefixes' => '@@',
             'isStrict' => true,
             'defaultLanguage' => 'en',
         ],
-        \AlexNo\Fieldlingo\Adapters\Yii2\AdvActiveQuery::class => [
+        \AlexNo\FieldLingo\Adapters\Yii2\AdvActiveQuery::class => [
             'localizedPrefixes' => '@@',
         ],
     ],
@@ -80,7 +80,7 @@ Make your AR models extend the provided AdvActiveRecord:
 ```php
 namespace app\models;
 
-use AlexNo\Fieldlingo\Adapters\Yii2\AdvActiveRecord;
+use AlexNo\FieldLingo\Adapters\Yii2\AdvActiveRecord;
 
 class PetType extends AdvActiveRecord
 {
@@ -109,7 +109,7 @@ $query = PetType::find()
     ->orderBy('@@name ASC');
 ```
 
-Fieldlingo will convert `@@name` to `name_en/name_uk` based on current language.
+FieldLingo will convert `@@name` to `name_en/name_uk` based on current language.
 
 ## Core design
 

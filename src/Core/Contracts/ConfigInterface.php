@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace AlexNo\Fieldlingo\Core\Contracts;
+namespace AlexNo\FieldLingo\Core\Contracts;
 
 /**
  * Interface ConfigInterface
@@ -12,7 +12,7 @@ namespace AlexNo\Fieldlingo\Core\Contracts;
  * names (for example "@@name") are converted into concrete column/attribute names
  * (for example "name_en").
  *
- * @package AlexNo\Fieldlingo\Core\Contracts
+ * @package AlexNo\FieldLingo\Core\Contracts
  * @license MIT
  * @author  Oleksandr Nosov <alex@4n.com.ua>
  * @copyright 2025 Oleksandr Nosov

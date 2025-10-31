@@ -1,22 +1,22 @@
 <?php
 declare(strict_types=1);
 
-namespace AlexNo\Fieldlingo\Core;
+namespace AlexNo\FieldLingo\Core;
 /**
  * Class Localizer
  * Framework-agnostic service that converts structured localized attribute names
  * (for example '@@name') into concrete attribute/column names (for example 'name_en').
  * This implementation expects a ConfigInterface implementation (simple DTO or array wrapper).
  *
- * @package AlexNo\Fieldlingo\Core
+ * @package AlexNo\FieldLingo\Core
  * @license MIT
  * @author  Oleksandr Nosov <alex@4n.com.ua>
  * @copyright 2025 Oleksandr Nosov
  * @since 1.0.0
  */
-use AlexNo\Fieldlingo\Core\Contracts\ConfigInterface;
-use AlexNo\Fieldlingo\Core\Contracts\LocalizerInterface;
-use AlexNo\Fieldlingo\Adapters\Yii2\MissingLocalizedAttributeException;
+use AlexNo\FieldLingo\Core\Contracts\ConfigInterface;
+use AlexNo\FieldLingo\Core\Contracts\LocalizerInterface;
+use AlexNo\FieldLingo\Adapters\Yii2\MissingLocalizedAttributeException;
 use Yii;
 
 /**

@@ -10,7 +10,7 @@ declare(strict_types=1);
  * @author  Oleksandr Nosov <alex@4n.com.ua>
  * @copyright 2025 Oleksandr Nosov
  */
-namespace AlexNo\Fieldlingo\Core\Contracts;
+namespace AlexNo\FieldLingo\Core\Contracts;
 
 /**
  * Interface LocalizerInterface

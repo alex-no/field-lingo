@@ -19,7 +19,7 @@ declare(strict_types=1);
  * @copyright 2025 Oleksandr Nosov
  * @since 1.0.0
  */
-namespace AlexNo\Fieldlingo\Adapters\Yii2;
+namespace AlexNo\FieldLingo\Adapters\Yii2;
 
 use yii\db\ActiveRecord;
 
