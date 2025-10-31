@@ -28,7 +28,7 @@ class LingoActiveQuery extends ActiveQuery
     /**
      * {@inheritdoc}
      */
-    public function select($columns, $option = null): array|string
+    public function select($columns, $option = null)
     {
         return parent::select($this->localizeColumns($columns), $option);
     }
@@ -36,7 +36,7 @@ class LingoActiveQuery extends ActiveQuery
     /**
      * {@inheritdoc}
      */
-    public function where($condition, $params = []): array|string
+    public function where($condition, $params = [])
     {
         return parent::where($this->localizeCondition($condition), $params);
     }
@@ -44,7 +44,7 @@ class LingoActiveQuery extends ActiveQuery
     /**
      * {@inheritdoc}
      */
-    public function andWhere($condition, $params = []): array|string
+    public function andWhere($condition, $params = [])
     {
         return parent::andWhere($this->localizeCondition($condition), $params);
     }
@@ -52,7 +52,7 @@ class LingoActiveQuery extends ActiveQuery
     /**
      * {@inheritdoc}
      */
-    public function orWhere($condition, $params = []): array|string
+    public function orWhere($condition, $params = [])
     {
         return parent::orWhere($this->localizeCondition($condition), $params);
     }
@@ -60,7 +60,7 @@ class LingoActiveQuery extends ActiveQuery
     /**
      * {@inheritdoc}
      */
-    public function filterWhere($condition): array|string
+    public function filterWhere($condition)
     {
         return parent::filterWhere($this->localizeCondition($condition));
     }
@@ -68,7 +68,7 @@ class LingoActiveQuery extends ActiveQuery
     /**
      * {@inheritdoc}
      */
-    public function andFilterWhere($condition): array|string
+    public function andFilterWhere($condition)
     {
         return parent::andFilterWhere($this->localizeCondition($condition));
     }
@@ -76,7 +76,7 @@ class LingoActiveQuery extends ActiveQuery
     /**
      * {@inheritdoc}
      */
-    public function orFilterWhere($condition): array|string
+    public function orFilterWhere($condition)
     {
         return parent::orFilterWhere($this->localizeCondition($condition));
     }
@@ -84,7 +84,7 @@ class LingoActiveQuery extends ActiveQuery
     /**
      * {@inheritdoc}
      */
-    public function orderBy($columns): array|string
+    public function orderBy($columns)
     {
         return parent::orderBy($this->localizeOrderColumns($columns));
     }
@@ -92,7 +92,7 @@ class LingoActiveQuery extends ActiveQuery
     /**
      * {@inheritdoc}
      */
-    public function addOrderBy($columns): array|string
+    public function addOrderBy($columns)
     {
         return parent::addOrderBy($this->localizeOrderColumns($columns));
     }
@@ -100,7 +100,7 @@ class LingoActiveQuery extends ActiveQuery
     /**
      * {@inheritdoc}
      */
-    public function groupBy($columns): array|string
+    public function groupBy($columns)
     {
         return parent::groupBy($this->localizeColumns($columns));
     }
@@ -108,7 +108,7 @@ class LingoActiveQuery extends ActiveQuery
     /**
      * {@inheritdoc}
      */
-    public function addGroupBy($columns): array|string
+    public function addGroupBy($columns)
     {
         return parent::addGroupBy($this->localizeColumns($columns));
     }
@@ -119,7 +119,7 @@ class LingoActiveQuery extends ActiveQuery
      * @param string|array $columns
      * @return array|string
      */
-    protected function localizeColumns($columns): array|string
+    protected function localizeColumns($columns): array
     {
         // Keep strings like 'id, @@name' -> array
         $columns = $this->stringToArray($columns);
@@ -143,7 +143,7 @@ class LingoActiveQuery extends ActiveQuery
      * @param string|array $columns
      * @return array|string
      */
-    protected function localizeOrderColumns($columns): array|string
+    protected function localizeOrderColumns($columns): array
     {
         $columns = $this->stringToArray($columns);
 
