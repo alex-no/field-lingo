@@ -149,9 +149,9 @@ field-lingo/
 │  │     └─ ConfigInterface.php
 │  └── Adapters/
 │      └─ Yii2/
-│         ├─ AdvActiveRecord.php
-│         ├─ AdvActiveQuery.php
-│         ├─ AdvActiveDataProvider.php
+│         ├─ LingoActiveRecord.php
+│         ├─ LingoActiveQuery.php
+│         ├─ LingoActiveDataProvider.php
 │         ├─ LocalizedAttributeTrait.php
 │         └─ MissingLocalizedAttributeException.php
 ├─ tests/
