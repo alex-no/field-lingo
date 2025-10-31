@@ -29,13 +29,13 @@ Primary goals:
 
 ## 🧩 Key classes
 
-- `\AlexNo\FieldLingo\Adapters\Yii2\LingoActiveRecord`
+- **`\AlexNo\FieldLingo\Adapters\Yii2\LingoActiveRecord`**
    - Extends `yii\db\ActiveRecord`.
-   ` Used when working with model attributes (reads/writes, forms, `toArray()`).
+   - Used when working with model attributes (reads/writes, forms, `toArray()`).
 
 - `\AlexNo\FieldLingo\Adapters\Yii2\LingoActiveQuery`
    - Extends `yii\db\ActiveQuery`.
-   ` Used to transform field names in conditions, `select()` lists, and custom textual SQL logic within the query layer.
+   - Used to transform field names in conditions, `select()` lists, and custom textual SQL logic within the query layer.
 
 - `\AlexNo\FieldLingo\Adapters\Yii2\LingoActiveDataProvider`
    - Extends `yii\data\ActiveDataProvider` (or `yii\db\ActiveDataProvider` depending on implementation).
