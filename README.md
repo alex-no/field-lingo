@@ -59,12 +59,12 @@ Add to `params` (or any config area) the advActive section (example):
 ```php
 'params' => [
     'advActive' => [
-        \AlexNo\FieldLingo\Adapters\Yii2\AdvActiveRecord::class => [
+        \AlexNo\FieldLingo\Adapters\Yii2\LingoActiveRecord::class => [
             'localizedPrefixes' => '@@',
             'isStrict' => true,
             'defaultLanguage' => 'en',
         ],
-        \AlexNo\FieldLingo\Adapters\Yii2\AdvActiveQuery::class => [
+        \AlexNo\FieldLingo\Adapters\Yii2\LingoActiveQuery::class => [
             'localizedPrefixes' => '@@',
         ],
     ],
@@ -75,14 +75,14 @@ Add to `params` (or any config area) the advActive section (example):
 
 ## Usage in models
 
-Make your AR models extend the provided AdvActiveRecord:
+Make your AR models extend the provided LingoActiveRecord:
 
 ```php
 namespace app\models;
 
-use AlexNo\FieldLingo\Adapters\Yii2\AdvActiveRecord;
+use AlexNo\FieldLingo\Adapters\Yii2\LingoActiveRecord;
 
-class PetType extends AdvActiveRecord
+class PetType extends LingoActiveRecord
 {
     public static function tableName()
     {
@@ -117,11 +117,11 @@ FieldLingo will convert `@@name` to `name_en/name_uk` based on current language.
 
 `Core/Contracts/LocalizerInterface.php` — contract for Localizer implementations.
 
-`Adapters/Yii2/AdvActiveRecord.php` — extends `yii\db\ActiveRecord`, uses trait to handle attribute access.
+`Adapters/Yii2/LingoActiveRecord.php` — extends `yii\db\ActiveRecord`, uses trait to handle attribute access.
 
-`Adapters/Yii2/AdvActiveQuery.php` — extends `yii\db\ActiveQuery` and rewrites `select`, `where`, `orderBy`, `groupBy`, and other helpers to localize columns/conditions.
+`Adapters/Yii2/LingoActiveQuery.php` — extends `yii\db\ActiveQuery` and rewrites `select`, `where`, `orderBy`, `groupBy`, and other helpers to localize columns/conditions.
 
-`Adapters/Yii2/AdvActiveDataProvider.php` — adjusts sort attributes and default order.
+`Adapters/Yii2/LingoActiveDataProvider.php` — adjusts sort attributes and default order.
 
 The core can be reused later for adapters (Laravel Eloquent, Doctrine, plain SQL builders).
 
@@ -135,7 +135,7 @@ Main options:
 
 `isStrict (bool)` — if true throw when localized column missing; if `false` fallback to `defaultLanguage`.
 
-These options may be set globally, per-class (AdvActiveRecord / AdvActiveQuery) or per-model.
+These options may be set globally, per-class (LingoActiveRecord / LingoActiveQuery) or per-model.
 
 ## 🧱 Directory Structure
 
