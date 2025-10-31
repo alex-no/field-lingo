@@ -78,7 +78,7 @@ Add to `params` (or any config area) the LingoActive section (example):
 ],
 ```
 
-> You can override per-model by adding the model class key in the advActive section.
+> You can override per-model by adding the model class key in the LingoActive section.
 
 ## Usage in models
 

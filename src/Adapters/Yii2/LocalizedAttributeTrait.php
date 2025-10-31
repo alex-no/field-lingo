@@ -6,13 +6,17 @@ namespace AlexNo\FieldLingo\Adapters\Yii2;
  * Trait LocalizedAttributeTrait
  * @file LocalizedAttributeTrait.php - Trait for localized attribute name handling.
  *
- * Provides localized attribute name handling for Yii2 ActiveRecord/ActiveQuery adapters.
+ * Trait for localized attribute name handling for Yii2 ActiveRecord/ActiveQuery adapters.
  *
  * Configurable properties (can be overridden via component config or per-model):
  *  - public string|array $localizedPrefixes = '@@';
  *  - public bool $isStrict = true;
  *  - public string $defaultLanguage = 'en';
- * 
+ *
+ * The trait will attempt to read global defaults from Yii::$app->params['LingoActive']
+ * keyed by either the concrete model class (if $this->modelClass exists) or by the
+ * adapter class name using self::class.
+ *
  * This file is part of LanguageDetector package.
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -30,6 +34,7 @@ trait LocalizedAttributeTrait
 {
     /**
      * Prefix or prefixes used to mark structured localized names.
+     * Example: '@@' or ['@@', '##'].
      * @var string|string[]
      */
     public $localizedPrefixes = '@@';
@@ -47,6 +52,38 @@ trait LocalizedAttributeTrait
      */
     public string $defaultLanguage = 'en';
 
+
+    /**
+     * Initialize localized settings from global configuration.
+     *
+     * Called by classes that use this trait if they call parent::init() or call this init explicitly.
+     *
+     * @return void
+     */
+    public function init(): void
+    {
+        // If the using class has parent::init, call it (same pattern as in original).
+        if (is_callable('parent::init')) {
+            parent::init();
+        }
+
+        $globalConfig = Yii::$app->params['LingoActive'] ?? [];
+        // Prefer per-model override when available (common pattern for Query/Record adapters)
+        $class = isset($this->modelClass) ? $this->modelClass : static::class;
+        $baseClass = self::class;
+
+        $config = $globalConfig[$class] ?? ($globalConfig[$baseClass] ?? []);
+
+        if (is_array($config)) {
+            foreach ($config as $key => $value) {
+                // Only set known properties
+                if (property_exists($this, $key)) {
+                    $this->$key = $value;
+                }
+            }
+        }
+    }
+
     /**
      * Normalize prefixes to array.
      *
@@ -54,13 +91,31 @@ trait LocalizedAttributeTrait
      */
     protected function getPrefixesArray(): array
     {
-        return is_array($this->localizedPrefixes) ?
-            array_values($this->localizedPrefixes) :
-            [$this->localizedPrefixes];
+        if (is_array($this->localizedPrefixes)) {
+            return array_values($this->localizedPrefixes);
+        }
+
+        // allow null or empty string to behave as empty array
+        if ($this->localizedPrefixes === null || $this->localizedPrefixes === '') {
+            return [];
+        }
+
+        return [(string)$this->localizedPrefixes];
     }
 
     /**
      * Convert structured name like '@@name' to actual localized attribute name.
+     *
+     * Behavior:
+     *  - if $name does not start with any configured prefix — returns $name unchanged.
+     *  - determines current language from Yii::$app->language (first part before _ or -).
+     *  - forms candidate: {base}_{lang}
+     *  - if method hasAttribute exists:
+     *      - if candidate exists => return it
+     *      - else if isStrict => throw MissingLocalizedAttributeException
+     *      - else try fallback {base}_{defaultLanguage} and if exists return it, otherwise return candidate
+     *  - if hasAttribute doesn't exist (cannot check) — return candidate (or fallback candidate when not prefixed)
+     *  - if isStrict and cannot check existence — returns candidate anyway (caller may validate)
      *
      * @param string $name
      * @return string
@@ -69,8 +124,9 @@ trait LocalizedAttributeTrait
     protected function getLocalizedAttributeName(string $name): string
     {
         foreach ($this->getPrefixesArray() as $prefix) {
-            if (str_starts_with($name, $prefix)) {
+            if ($prefix !== '' && str_starts_with($name, $prefix)) {
                 $base = substr($name, strlen($prefix));
+
                 $lang = Yii::$app->language ?? null;
                 if (is_string($lang) && $lang !== '') {
                     $parts = preg_split('/[_-]/', $lang);
@@ -79,26 +135,29 @@ trait LocalizedAttributeTrait
                     $lang = $this->defaultLanguage;
                 }
 
-                $localized = "{$base}_{$lang}";
+                $candidate = "{$base}_{$lang}";
 
-                // If model has attribute checking, prefer that; otherwise return candidate and let caller handle
-                if (method_exists($this, 'hasAttribute') && $this->hasAttribute($localized)) {
-                    return $localized;
-                }
+                // If we can check attributes, prefer that
+                if (method_exists($this, 'hasAttribute')) {
+                    // attribute exists: return it
+                    if ($this->hasAttribute($candidate)) {
+                        return $candidate;
+                    }
 
-                if ($this->isStrict) {
-                    // Strict mode: if attribute doesn't exist — throw
-                    throw new MissingLocalizedAttributeException($localized);
-                }
+                    // attribute not found
+                    if ($this->isStrict) {
+                        throw new MissingLocalizedAttributeException($candidate);
+                    }
 
-                // Non-strict: try default language fallback if different
-                $fallback = "{$base}_{$this->defaultLanguage}";
-                if (method_exists($this, 'hasAttribute') && $this->hasAttribute($fallback)) {
-                    return $fallback;
+                    // Non-strict: try fallback language only if different
+                    $fallback = "{$base}_{$this->defaultLanguage}";
+                    if ($this->defaultLanguage !== $lang && $this->hasAttribute($fallback)) {
+                        return $fallback;
+                    }
                 }
 
                 // If attribute existence cannot be checked or fallback not found, return the original candidate
-                return $localized;
+                return $candidate;
             }
         }
 
