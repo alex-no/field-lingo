@@ -216,5 +216,4 @@ MIT. See `LICENSE`.
 
 ## Contact
 
-Author: **Oleksandr Nosov**
-Email: alex@4n.com.ua
+*Field-lingo © 2025 Oleksandr Nosov. Released under the MIT License.*

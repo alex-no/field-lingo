@@ -19,12 +19,12 @@
   },
   "autoload": {
     "psr-4": {
-      "AlexNo\\Field-lingo\\": "src/"
+      "AlexNo\\FieldLingo\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "AlexNo\\Field-lingo\\Tests\\": "tests/"
+      "AlexNo\\FieldLingo\\Tests\\": "tests/"
     }
   },
   "require-dev": {
