@@ -54,19 +54,26 @@ In code we refer to `@@name`. FieldLingo maps `@@name → name_{lang}` (e.g. `na
 ## Configure
 Configure
 
-Add to `params` (or any config area) the advActive section (example):
+Add to `params` (or any config area) the LingoActive section (example):
 
 ```php
 'params' => [
-    'advActive' => [
-        \AlexNo\FieldLingo\Adapters\Yii2\LingoActiveRecord::class => [
-            'localizedPrefixes' => '@@',
-            'isStrict' => true,
-            'defaultLanguage' => 'en',
+    'LingoActive' => [
+        // Global defaults for adapters
+        \AlexNo\Fieldlingo\Adapters\Yii2\LingoActiveRecord::class => [
+            'localizedPrefixes' => '@@',   // or ['@@', '##']
+            'isStrict' => true,            // throw on missing localized attribute
+            'defaultLanguage' => 'en',     // fallback language code
         ],
-        \AlexNo\FieldLingo\Adapters\Yii2\LingoActiveQuery::class => [
+        \AlexNo\Fieldlingo\Adapters\Yii2\LingoActiveQuery::class => [
             'localizedPrefixes' => '@@',
         ],
+        // Optional per-model override example:
+        // \app\models\PetType::class => [
+        //     'localizedPrefixes' => '##',
+        //     'isStrict' => false,
+        //     'defaultLanguage' => 'uk',
+        // ],
     ],
 ],
 ```
