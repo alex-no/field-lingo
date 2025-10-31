@@ -76,7 +76,6 @@ In code we refer to `@@name`. FieldLingo maps `@@name → name_{lang}` (e.g. `na
 ---
 
 ### Configure
-Configure
 
 Add to `params` (or any config area) the LingoActive section (example):
 
@@ -103,8 +102,8 @@ Add to `params` (or any config area) the LingoActive section (example):
 ```
 
 > Notes:
- - Per-model overrides have higher priority than adapter-level defaults.
- - The trait reads Yii::$app->params['LingoActive'] by adapter name or model class name.
+> - Per-model overrides have higher priority than adapter-level defaults.
+> - The trait reads Yii::$app->params['LingoActive'] by adapter name or model class name.
 
 ### Configuration options
 
@@ -171,8 +170,8 @@ $rows = Post::find()
       ->all();
 // FieldLingo will convert `@@title` to `title_en/title_uk` based on current language.      
 ```
-> *Notes for ActiveQuery:*
- - Query layer cannot check `hasAttribute()` easily before SQL execution. The trait returns language-specific candidates and the DB will determine if the column exists. If you want stricter validation add a model-level check before building SQL (or enable `isStrict` and use ActiveRecord assertions in tests).
+> **Notes for ActiveQuery:**
+> - Query layer cannot check `hasAttribute()` easily before SQL execution. The trait returns language-specific candidates and the DB will determine if the column exists. If you want stricter validation add a model-level check before building SQL (or enable `isStrict` and use ActiveRecord assertions in tests).
 
 ### ActiveDataProvider
 
@@ -189,7 +188,7 @@ $sortAttributes = $dataProvider->getSort()->attributes;
 // map keys with convertLocalizedFields(...) when necessary
 ```
 > **Notes for DataProvider:**
- - Use the adapter-level conversion to normalize incoming `sort` or filter `fields` from the request.
+> - Use the adapter-level conversion to normalize incoming `sort` or filter `fields` from the request.
 
 
 ---
