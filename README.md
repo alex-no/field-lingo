@@ -125,7 +125,7 @@ The `LocalizedAttributeTrait` does the heavy lifting:
  - If the using class implements `hasAttribute()` (as ActiveRecord does), the trait checks attribute existence:
     - If attribute exists — returns it.
     - If not and `isStrict === true` — throws `MissingLocalizedAttributeException`.
-    ` If not and `isStrict === false` — tries fallback `{base}_{defaultLanguage}` and returns it if exists; otherwise returns the candidate.
+    - If not and `isStrict === false` — tries fallback `{base}_{defaultLanguage}` and returns it if exists; otherwise returns the candidate.
  - If `hasAttribute()` is not available (e.g. at query layer), the trait returns the candidate name and lets the caller use it in SQL / selections.
 
 You can call `$this->convertLocalizedFields([ ... ])` to map arrays of fields at once.
@@ -229,13 +229,22 @@ field-lingo/
 │  │  └─ Contracts/
 │  │     ├─ LocalizerInterface.php
 │  │     └─ ConfigInterface.php
-│  └── Adapters/
-│      └─ Yii2/
-│         ├─ LingoActiveRecord.php
-│         ├─ LingoActiveQuery.php
-│         ├─ LingoActiveDataProvider.php
-│         ├─ LocalizedAttributeTrait.php
-│         └─ MissingLocalizedAttributeException.php
+│  ├── Adapters/
+│  │   └─ Yii2/
+│  │      ├─ LingoActiveRecord.php
+│  │      ├─ LingoActiveQuery.php
+│  │      ├─ LingoActiveDataProvider.php
+│  │      ├─ LocalizedAttributeTrait.php
+│  │      └─ MissingLocalizedAttributeException.php
+│  └─ gii/
+│     ├─ ExtendedModelGenerator.php
+│     ├─ templates/
+│     │   └─ extended/
+│     │       ├─ model.php
+│     │       ├─ model-child.php
+│     │       └─ query.php
+│     └─ views/
+│         └─ form.php
 ├─ tests/
 │  ├─ unit/
 │  │  ├─ LocalizerTest.php
