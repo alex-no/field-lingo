@@ -229,22 +229,13 @@ field-lingo/
 │  │  └─ Contracts/
 │  │     ├─ LocalizerInterface.php
 │  │     └─ ConfigInterface.php
-│  ├── Adapters/
-│  │   └─ Yii2/
-│  │      ├─ LingoActiveRecord.php
-│  │      ├─ LingoActiveQuery.php
-│  │      ├─ LingoActiveDataProvider.php
-│  │      ├─ LocalizedAttributeTrait.php
-│  │      └─ MissingLocalizedAttributeException.php
-│  └─ gii/
-│     ├─ ExtendedModelGenerator.php
-│     ├─ templates/
-│     │   └─ extended/
-│     │       ├─ model.php
-│     │       ├─ model-child.php
-│     │       └─ query.php
-│     └─ views/
-│         └─ form.php
+│  └── Adapters/
+│      └─ Yii2/
+│         ├─ LingoActiveRecord.php
+│         ├─ LingoActiveQuery.php
+│         ├─ LingoActiveDataProvider.php
+│         ├─ LocalizedAttributeTrait.php
+│         └─ MissingLocalizedAttributeException.php
 ├─ tests/
 │  ├─ unit/
 │  │  ├─ LocalizerTest.php
