@@ -155,7 +155,7 @@ $data = $post->toArray(['id', '@@title', '@@content']);
 // result keys will include title_en / content_en (resolved names)
 ```
 
- > **Notes for ActiveRecord:**
+ > Notes for **ActiveRecord:**
   - Because `hasAttribute()` is available, missing localized columns are validated according to `isStrict`.
   - If you rely on `toArray()` or `fields()` to export language-aware data, ensure the adapter or model calls `convertLocalizedFields()` where appropriate.
 
@@ -170,7 +170,7 @@ $rows = Post::find()
       ->all();
 // FieldLingo will convert `@@title` to `title_en/title_uk` based on current language.      
 ```
-> **Notes for ActiveQuery:**
+> Notes for **ActiveQuery:**
  - Query layer cannot check `hasAttribute()` easily before SQL execution. The trait returns language-specific candidates and the DB will determine if the column exists. If you want stricter validation add a model-level check before building SQL (or enable `isStrict` and use ActiveRecord assertions in tests).
 
 ### ActiveDataProvider
@@ -187,7 +187,7 @@ $dataProvider = new \AlexNo\FieldLingo\Adapters\Yii2\LingoActiveDataProvider([
 $sortAttributes = $dataProvider->getSort()->attributes;
 // map keys with convertLocalizedFields(...) when necessary
 ```
-> **Notes for DataProvider:**
+> Notes for **DataProvider:**
  - Use the adapter-level conversion to normalize incoming `sort` or filter `fields` from the request.
 
 
