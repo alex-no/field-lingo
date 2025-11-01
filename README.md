@@ -175,7 +175,7 @@ $rows = Post::find()
 
 ### ActiveDataProvider
 
-`DataProvider` class is helpful when you expose sorting/filtering to external requests and need to map `@@` tokens to real DB columns.
+`ActiveDataProvider` class is helpful when you expose sorting/filtering to external requests and need to map `@@` tokens to real DB columns.
 
 ```php
 $dataProvider = new \AlexNo\FieldLingo\Adapters\Yii2\LingoActiveDataProvider([
@@ -187,7 +187,7 @@ $dataProvider = new \AlexNo\FieldLingo\Adapters\Yii2\LingoActiveDataProvider([
 $sortAttributes = $dataProvider->getSort()->attributes;
 // map keys with convertLocalizedFields(...) when necessary
 ```
-> Notes for **DataProvider:**
+> Notes for **ActiveDataProvider:**
  - Use the adapter-level conversion to normalize incoming `sort` or filter `fields` from the request.
 
 
