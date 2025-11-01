@@ -33,11 +33,11 @@ Primary goals:
    - Extends `yii\db\ActiveRecord`.
    - Used when working with model attributes (reads/writes, forms, `toArray()`).
 
-- `\AlexNo\FieldLingo\Adapters\Yii2\LingoActiveQuery`
+- **`\AlexNo\FieldLingo\Adapters\Yii2\LingoActiveQuery`**
    - Extends `yii\db\ActiveQuery`.
    - Used to transform field names in conditions, `select()` lists, and custom textual SQL logic within the query layer.
 
-- `\AlexNo\FieldLingo\Adapters\Yii2\LingoActiveDataProvider`
+- **`\AlexNo\FieldLingo\Adapters\Yii2\LingoActiveDataProvider`**
    - Extends `yii\data\ActiveDataProvider` (or `yii\db\ActiveDataProvider` depending on implementation).
    - Used for operations that require field translation in the data provider level (for example sorting, pagination where attribute names are passed externally).
 
@@ -102,8 +102,8 @@ Add to `params` (or any config area) the LingoActive section (example):
 ```
 
 > Notes:
-> - Per-model overrides have higher priority than adapter-level defaults.
-> - The trait reads Yii::$app->params['LingoActive'] by adapter name or model class name.
+ - Per-model overrides have higher priority than adapter-level defaults.
+ - The trait reads Yii::$app->params['LingoActive'] by adapter name or model class name.
 
 ### Configuration options
 
@@ -156,8 +156,8 @@ $data = $post->toArray(['id', '@@title', '@@content']);
 ```
 
  > **Notes for ActiveRecord:**
- > - Because `hasAttribute()` is available, missing localized columns are validated according to `isStrict`.
- > - If you rely on `toArray()` or `fields()` to export language-aware data, ensure the adapter or model calls `convertLocalizedFields()` where appropriate.
+  - Because `hasAttribute()` is available, missing localized columns are validated according to `isStrict`.
+  - If you rely on `toArray()` or `fields()` to export language-aware data, ensure the adapter or model calls `convertLocalizedFields()` where appropriate.
 
 ### ActiveQuery
 
@@ -171,7 +171,7 @@ $rows = Post::find()
 // FieldLingo will convert `@@title` to `title_en/title_uk` based on current language.      
 ```
 > **Notes for ActiveQuery:**
-> - Query layer cannot check `hasAttribute()` easily before SQL execution. The trait returns language-specific candidates and the DB will determine if the column exists. If you want stricter validation add a model-level check before building SQL (or enable `isStrict` and use ActiveRecord assertions in tests).
+ - Query layer cannot check `hasAttribute()` easily before SQL execution. The trait returns language-specific candidates and the DB will determine if the column exists. If you want stricter validation add a model-level check before building SQL (or enable `isStrict` and use ActiveRecord assertions in tests).
 
 ### ActiveDataProvider
 
@@ -188,7 +188,7 @@ $sortAttributes = $dataProvider->getSort()->attributes;
 // map keys with convertLocalizedFields(...) when necessary
 ```
 > **Notes for DataProvider:**
-> - Use the adapter-level conversion to normalize incoming `sort` or filter `fields` from the request.
+ - Use the adapter-level conversion to normalize incoming `sort` or filter `fields` from the request.
 
 
 ---
