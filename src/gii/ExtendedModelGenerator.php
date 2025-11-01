@@ -46,7 +46,7 @@ class ExtendedModelGenerator extends Generator
         $modelClass = $this->getModelClass();
         $baseFile = dirname($files[0]->path) . '/base/' . $modelClass . '.php';
 
-        // Переносим основной файл в base/
+        // We move the main file to base
         foreach ($files as $i => $file) {
             if (str_ends_with($file->path, $modelClass . '.php')) {
                 $files[$i]->path = $baseFile;
@@ -57,7 +57,7 @@ class ExtendedModelGenerator extends Generator
             }
         }
 
-        // Генерация child class
+        // Generation of child class
         if ($this->generateChildClass) {
             $childPath = Yii::getAlias('@app/models/' . $modelClass . '.php');
             if (!file_exists($childPath)) {
