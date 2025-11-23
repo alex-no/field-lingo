@@ -1,12 +1,46 @@
 # 🗂️ Field-lingo
 
 [![Packagist Version](https://img.shields.io/packagist/v/alex-no/field-lingo.svg)](https://packagist.org/packages/alex-no/field-lingo)
+[![PHP Version](https://img.shields.io/packagist/php-v/alex-no/field-lingo.svg)](https://packagist.org/packages/alex-no/field-lingo)
+[![Total Downloads](https://img.shields.io/packagist/dt/alex-no/field-lingo.svg)](https://packagist.org/packages/alex-no/field-lingo)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Field-lingo** — lightweight library to easily work with database columns that store multiple language versions of the same attribute in one row (e.g. `name_en`, `name_uk`, `name_ru`).  
+**Field-lingo** — lightweight library to easily work with database columns that store multiple language versions of the same attribute in one row (e.g. `name_en`, `name_uk`, `name_ru`).
 It provides a simple, consistent mechanism to reference "structured localized attribute names" (like `@@name`) and transparently map them to the actual column `name_<lang>` according to current language settings.
 
 This repository currently contains a full integration for **Yii2** (ActiveRecord / ActiveQuery / DataProvider) under `src/Adapters/Yii2` and a framework-agnostic core in `src/Core` for future adapters.
+
+---
+
+## 📋 Table of Contents
+
+- [Overview](#-overview)
+- [Requirements](#-requirements)
+- [Key Classes](#-key-classes)
+- [Quick Start (Yii2)](#️-quick-start-yii2)
+  - [Install](#install)
+  - [Optional Recommendation](#optional-recommendation)
+  - [Basic Idea](#basic-idea)
+  - [Configure](#configure)
+  - [Configuration Options](#configuration-options)
+- [LocalizedAttributeTrait Behavior](#-localizedattributetrait--behavior-summary)
+- [Usage Examples](#-usage-examples)
+  - [ActiveRecord](#activerecord)
+  - [ActiveQuery](#activequery)
+  - [ActiveDataProvider](#activedataprovider)
+- [Fallback Mechanism](#-fallback-mechanism)
+- [Exception Handling](#️-exception)
+- [Advanced Topics](#-advanced-topics--hooks)
+- [Migration Guide](#-migration-guide)
+- [Troubleshooting](#-troubleshooting)
+- [Core Design](#-core-design)
+- [Directory Structure](#-directory-structure)
+- [Examples](#examples)
+- [Testing](#-testing)
+- [Contribution](#-contribution)
+- [Roadmap](#️-roadmap)
+- [License](#-license)
+- [Contact](#-contact)
 
 ---
 
@@ -24,6 +58,15 @@ Primary goals:
  - Support per-adapter and per-model configuration (prefixes, fallback language, strict mode).
  - Keep the adapter API close to native Yii classes so integration is minimal.
 
+---
+
+## 📦 Requirements
+
+- **PHP**: >= 8.0
+- **Yii2**: ^2.0
+
+**Optional but recommended:**
+- [alex-no/language-detector](https://packagist.org/packages/alex-no/language-detector) — for automatic user language detection (requires separate configuration)
 
 ---
 
@@ -133,63 +176,310 @@ You can call `$this->convertLocalizedFields([ ... ])` to map arrays of fields at
 ---
 
 ## 🚀 Usage examples
+
 ### ActiveRecord
 
 When using `LingoActiveRecord`, you can reference localized attributes directly in code:
+
 ```php
 use FieldLingo\Adapters\Yii2\LingoActiveRecord;
 
-
+/**
+ * Example Post model
+ * Table columns: id, title_en, title_uk, title_ru, content_en, content_uk, content_ru, created_at
+ */
 class Post extends LingoActiveRecord
 {
-// table columns: id, title_en, title_uk, content_en, content_uk
+    public static function tableName()
+    {
+        return 'post';
+    }
+
+    public function rules()
+    {
+        return [
+            [['title_en', 'title_uk'], 'required'],
+            [['content_en', 'content_uk'], 'string'],
+            [['title_en', 'title_uk', 'title_ru'], 'string', 'max' => 255],
+        ];
+    }
 }
 
-
+// ===== Reading localized attributes =====
+// Assuming Yii::$app->language = 'uk'
 $post = Post::findOne(1);
-$value = $post->getAttribute('@@title'); // resolves to title_en or title_uk
+$title = $post->getAttribute('@@title');  // Returns title_uk value
+$content = $post->getAttribute('@@content');  // Returns content_uk value
 
+// ===== Creating and saving records =====
+$post = new Post();
+$post->setAttribute('@@title', 'Новина дня');  // Sets title_uk
+$post->setAttribute('@@content', 'Текст новини');  // Sets content_uk
+$post->save();
 
-// array export converting fields:
-$data = $post->toArray(['id', '@@title', '@@content']);
-// result keys will include title_en / content_en (resolved names)
+// ===== Property-style access =====
+echo $post->{'@@title'};  // Same as getAttribute('@@title')
+
+// ===== Array export with localized fields =====
+$data = $post->toArray(['id', '@@title', '@@content', 'created_at']);
+// Result: ['id' => 1, 'title_uk' => 'Новина дня', 'content_uk' => 'Текст новини', 'created_at' => '...']
 ```
 
- > Notes for **ActiveRecord:**
-  - Because `hasAttribute()` is available, missing localized columns are validated according to `isStrict`.
-  - If you rely on `toArray()` or `fields()` to export language-aware data, ensure the adapter or model calls `convertLocalizedFields()` where appropriate.
+> **Notes for ActiveRecord:**
+> - Because `hasAttribute()` is available, missing localized columns are validated according to `isStrict`.
+> - If you rely on `toArray()` or `fields()` to export language-aware data, ensure the adapter or model calls `convertLocalizedFields()` where appropriate.
 
 ### ActiveQuery
 
-`LingoActiveQuery` resolves names used in `select()`, `andWhere()`, `orderBy()` and similar places.
+`LingoActiveQuery` resolves names used in `select()`, `andWhere()`, `orderBy()`, `groupBy()` and similar places.
+
+> **CRITICAL: Override the `find()` method**
+> To use `LingoActiveQuery`, you **must** override the `find()` method in your model:
 
 ```php
-$rows = Post::find()
-      ->select(['id', '@@title'])
-      ->where(['@@title' => 'Hello'])
-      ->all();
-// FieldLingo will convert `@@title` to `title_en/title_uk` based on current language.      
+use FieldLingo\Adapters\Yii2\LingoActiveRecord;
+use FieldLingo\Adapters\Yii2\LingoActiveQuery;
+
+class Post extends LingoActiveRecord
+{
+    public static function tableName()
+    {
+        return 'post';
+    }
+
+    /**
+     * IMPORTANT: Override find() to return LingoActiveQuery
+     * @return LingoActiveQuery
+     */
+    public static function find()
+    {
+        return new LingoActiveQuery(get_called_class());
+    }
+}
 ```
-> Notes for **ActiveQuery:**
- - Query layer cannot check `hasAttribute()` easily before SQL execution. The trait returns language-specific candidates and the DB will determine if the column exists. If you want stricter validation add a model-level check before building SQL (or enable `isStrict` and use ActiveRecord assertions in tests).
+
+**Now you can use `@@` fields in queries:**
+
+```php
+// ===== Simple select =====
+// Assuming Yii::$app->language = 'en'
+$posts = Post::find()
+    ->select(['id', '@@title', '@@content'])  // Selects: id, title_en, content_en
+    ->all();
+
+// ===== Where conditions =====
+$posts = Post::find()
+    ->where(['@@title' => 'Hello World'])  // WHERE title_en = 'Hello World'
+    ->all();
+
+$posts = Post::find()
+    ->where(['like', '@@title', 'News'])  // WHERE title_en LIKE '%News%'
+    ->all();
+
+// ===== Order by localized field =====
+$posts = Post::find()
+    ->orderBy(['@@title' => SORT_ASC])  // ORDER BY title_en ASC
+    ->all();
+
+// ===== Complex query example =====
+$posts = Post::find()
+    ->select(['id', '@@title', '@@content'])
+    ->where(['like', '@@title', 'News'])
+    ->andWhere(['>', 'created_at', '2024-01-01'])
+    ->orderBy(['@@title' => SORT_DESC])
+    ->limit(10)
+    ->all();
+
+// ===== Group by localized field =====
+$stats = Post::find()
+    ->select(['@@category', 'COUNT(*) as count'])
+    ->groupBy(['@@category'])  // GROUP BY category_en
+    ->asArray()
+    ->all();
+
+// ===== FilterWhere with dynamic params =====
+$posts = Post::find()
+    ->filterWhere([
+        '@@title' => $_GET['title'] ?? null,  // Only adds to WHERE if title is provided
+        '@@category' => $_GET['category'] ?? null,
+    ])
+    ->all();
+```
+
+> **Notes for ActiveQuery:**
+> - Query layer cannot check `hasAttribute()` easily before SQL execution. The trait returns language-specific candidates and the DB will determine if the column exists.
+> - Without overriding `find()`, your queries will use standard `ActiveQuery` and `@@` fields will not be converted.
 
 ### ActiveDataProvider
 
-`ActiveDataProvider` class is helpful when you expose sorting/filtering to external requests and need to map `@@` tokens to real DB columns.
+`LingoActiveDataProvider` is helpful when you expose sorting/filtering to external requests (like GridView) and need to map `@@` tokens to real DB columns.
+
+**Basic usage:**
 
 ```php
-$dataProvider = new \FieldLingo\Adapters\Yii2\LingoActiveDataProvider([
-'query' => Post::find(),
+use FieldLingo\Adapters\Yii2\LingoActiveDataProvider;
+
+$dataProvider = new LingoActiveDataProvider([
+    'query' => Post::find(),
+    'pagination' => [
+        'pageSize' => 20,
+    ],
+    'sort' => [
+        'attributes' => [
+            'id',
+            '@@title',    // Enables sorting by title_{lang}
+            '@@category', // Enables sorting by category_{lang}
+            'created_at',
+        ],
+    ],
 ]);
-
-
-// You may want to transform sort attributes before passing them to GridView
-$sortAttributes = $dataProvider->getSort()->attributes;
-// map keys with convertLocalizedFields(...) when necessary
 ```
-> Notes for **ActiveDataProvider:**
- - Use the adapter-level conversion to normalize incoming `sort` or filter `fields` from the request.
 
+**Usage with GridView:**
+
+```php
+use yii\grid\GridView;
+
+echo GridView::widget([
+    'dataProvider' => $dataProvider,
+    'columns' => [
+        'id',
+        [
+            'attribute' => '@@title',
+            'label' => 'Title',
+            'value' => function ($model) {
+                return $model->getAttribute('@@title');
+            },
+        ],
+        [
+            'attribute' => '@@category',
+            'label' => 'Category',
+            'filter' => ['news' => 'News', 'blog' => 'Blog'],
+            'value' => function ($model) {
+                return $model->getAttribute('@@category');
+            },
+        ],
+        'created_at:datetime',
+        ['class' => 'yii\grid\ActionColumn'],
+    ],
+]);
+```
+
+**Advanced: Custom sort configuration**
+
+```php
+$dataProvider = new LingoActiveDataProvider([
+    'query' => Post::find()->where(['status' => 'published']),
+    'sort' => [
+        'attributes' => [
+            '@@title' => [
+                'asc' => ['@@title' => SORT_ASC],
+                'desc' => ['@@title' => SORT_DESC],
+                'default' => SORT_ASC,
+                'label' => 'Title',
+            ],
+        ],
+        'defaultOrder' => [
+            '@@title' => SORT_ASC,
+        ],
+    ],
+]);
+```
+
+> **Notes for ActiveDataProvider:**
+> - `LingoActiveDataProvider` automatically converts `@@` field names in sort attributes and filter conditions.
+> - When defining custom sort attributes, use `@@` notation consistently across query, sort config, and GridView columns.
+> - The provider works seamlessly with Yii2's pagination and filtering mechanisms.
+
+
+---
+
+## 🔄 Fallback Mechanism
+
+Field-lingo includes a smart fallback system to handle missing localized columns gracefully. The behavior depends on the `isStrict` configuration option.
+
+### How Fallback Works
+
+When you request a localized attribute (e.g., `@@title` with current language = `uk`):
+
+1. **Library looks for `title_uk`**
+   - If exists → returns `title_uk` ✅
+   - If not exists → proceeds to step 2
+
+2. **Check `isStrict` mode:**
+   - **If `isStrict = true`** → throws `MissingLocalizedAttributeException` 🚫
+   - **If `isStrict = false`** → tries fallback language (step 3)
+
+3. **Fallback to `defaultLanguage`:**
+   - Library looks for `title_{defaultLanguage}` (e.g., `title_en` if `defaultLanguage = 'en'`)
+   - If exists → returns `title_en` ✅
+   - If not exists → returns candidate name `title_uk` (DB will handle error if column truly missing)
+
+### Configuration Examples
+
+**Strict mode (recommended for development):**
+```php
+'LingoActive' => [
+    \FieldLingo\Adapters\Yii2\LingoActiveRecord::class => [
+        'isStrict' => true,        // Throw exception on missing localized column
+        'defaultLanguage' => 'en',
+    ],
+],
+```
+
+**Non-strict mode with fallback (production-friendly):**
+```php
+'LingoActive' => [
+    \FieldLingo\Adapters\Yii2\LingoActiveRecord::class => [
+        'isStrict' => false,       // Use fallback language
+        'defaultLanguage' => 'en', // Fallback to English
+    ],
+],
+```
+
+### Practical Example
+
+```php
+// Database table has: id, title_en, title_uk (no title_ru)
+// Config: isStrict = false, defaultLanguage = 'en'
+
+// When Yii::$app->language = 'en'
+$post->getAttribute('@@title');  // Returns title_en ✅
+
+// When Yii::$app->language = 'uk'
+$post->getAttribute('@@title');  // Returns title_uk ✅
+
+// When Yii::$app->language = 'ru'
+$post->getAttribute('@@title');  // Returns title_en (fallback) ✅
+
+// --- With isStrict = true ---
+// When Yii::$app->language = 'ru'
+$post->getAttribute('@@title');  // Throws MissingLocalizedAttributeException 🚫
+```
+
+### Per-Model Fallback Configuration
+
+You can override fallback behavior for specific models:
+
+```php
+'LingoActive' => [
+    // Global strict mode
+    \FieldLingo\Adapters\Yii2\LingoActiveRecord::class => [
+        'isStrict' => true,
+        'defaultLanguage' => 'en',
+    ],
+
+    // But allow fallback for Product model
+    \app\models\Product::class => [
+        'isStrict' => false,
+        'defaultLanguage' => 'uk',  // Fallback to Ukrainian for products
+    ],
+],
+```
+
+> **Recommendation:**
+> - Use `isStrict = true` during development to catch missing translations early
+> - Use `isStrict = false` in production to gracefully handle missing translations with fallback
 
 ---
 
@@ -206,6 +496,399 @@ Make sure this exception is available in the adapter namespace or imported where
  - **Custom language resolver**: If your app resolves the current language from a non-standard place (cookie, user preferences, model property), consider overriding the trait by providing a `protected function resolveLanguage(): string` or modify the trait to call a `resolveLanguage()` hook.
  - **Multiple prefixes**: Set `localizedPrefixes` to an array such as `['@@', '##']` to support multiple patterns.
  - **Per-model overrides**: Per-model keys in `LingoActive` allow you to change prefixes and strictness for specific models.
+
+---
+
+## 🔀 Migration Guide
+
+Migrating an existing Yii2 project to Field-lingo is straightforward. Follow these steps:
+
+### Step 1: Install the package
+
+```bash
+composer require alex-no/field-lingo
+```
+
+### Step 2: Prepare database schema
+
+If you don't have localized columns yet, add them to your tables:
+
+```sql
+-- Example: Adding localized columns to existing 'post' table
+ALTER TABLE post
+    ADD COLUMN title_en VARCHAR(255) AFTER title,
+    ADD COLUMN title_uk VARCHAR(255) AFTER title_en,
+    ADD COLUMN content_en TEXT AFTER content,
+    ADD COLUMN content_uk TEXT AFTER content;
+
+-- Copy existing data to default language column (if needed)
+UPDATE post SET title_en = title WHERE title_en IS NULL;
+UPDATE post SET content_en = content WHERE content_en IS NULL;
+
+-- Optional: Drop old non-localized columns after migration
+-- ALTER TABLE post DROP COLUMN title, DROP COLUMN content;
+```
+
+### Step 3: Configure Field-lingo
+
+Add configuration to `config/params.php` or `config/web.php`:
+
+```php
+// config/params.php
+return [
+    'LingoActive' => [
+        \FieldLingo\Adapters\Yii2\LingoActiveRecord::class => [
+            'localizedPrefixes' => '@@',
+            'isStrict' => false,       // Use fallback during migration
+            'defaultLanguage' => 'en',
+        ],
+        \FieldLingo\Adapters\Yii2\LingoActiveQuery::class => [
+            'localizedPrefixes' => '@@',
+        ],
+    ],
+    // ... other params
+];
+```
+
+### Step 4: Update your models
+
+**Before (standard ActiveRecord):**
+```php
+use yii\db\ActiveRecord;
+
+class Post extends ActiveRecord
+{
+    public static function tableName()
+    {
+        return 'post';
+    }
+}
+```
+
+**After (LingoActiveRecord):**
+```php
+use FieldLingo\Adapters\Yii2\LingoActiveRecord;
+use FieldLingo\Adapters\Yii2\LingoActiveQuery;
+
+class Post extends LingoActiveRecord  // Changed parent class
+{
+    public static function tableName()
+    {
+        return 'post';
+    }
+
+    /**
+     * Override find() to use LingoActiveQuery
+     */
+    public static function find()
+    {
+        return new LingoActiveQuery(get_called_class());
+    }
+}
+```
+
+### Step 5: Update controllers and views
+
+**Before:**
+```php
+// Controller
+$post = Post::findOne($id);
+$post->title = 'New Title';
+$post->save();
+
+// View
+echo $post->title;
+```
+
+**After:**
+```php
+// Controller
+$post = Post::findOne($id);
+$post->setAttribute('@@title', 'New Title');  // Sets title_en or title_uk
+$post->save();
+
+// View
+echo $post->getAttribute('@@title');  // Gets title_en or title_uk
+```
+
+### Step 6: Update DataProviders
+
+**Before:**
+```php
+use yii\data\ActiveDataProvider;
+
+$dataProvider = new ActiveDataProvider([
+    'query' => Post::find(),
+]);
+```
+
+**After:**
+```php
+use FieldLingo\Adapters\Yii2\LingoActiveDataProvider;
+
+$dataProvider = new LingoActiveDataProvider([
+    'query' => Post::find(),
+    'sort' => [
+        'attributes' => ['id', '@@title', '@@category', 'created_at'],
+    ],
+]);
+```
+
+### Step 7: Update GridView columns
+
+**Before:**
+```php
+echo GridView::widget([
+    'dataProvider' => $dataProvider,
+    'columns' => [
+        'id',
+        'title',
+        'created_at:datetime',
+    ],
+]);
+```
+
+**After:**
+```php
+echo GridView::widget([
+    'dataProvider' => $dataProvider,
+    'columns' => [
+        'id',
+        [
+            'attribute' => '@@title',
+            'value' => function($model) {
+                return $model->getAttribute('@@title');
+            },
+        ],
+        'created_at:datetime',
+    ],
+]);
+```
+
+### Step 8: Test thoroughly
+
+```php
+// Test 1: Check attribute access
+$post = Post::findOne(1);
+var_dump($post->getAttribute('@@title'));
+
+// Test 2: Check query conversion
+$query = Post::find()->select(['@@title'])->where(['@@title' => 'Test']);
+echo $query->createCommand()->getRawSql();
+
+// Test 3: Check GridView sorting
+// Click on column headers in GridView to test sorting
+
+// Test 4: Test fallback (if using isStrict = false)
+Yii::$app->language = 'ru';  // Language without columns
+echo $post->getAttribute('@@title');  // Should return fallback language
+```
+
+### Migration Checklist
+
+- [ ] Database schema updated with localized columns
+- [ ] Existing data migrated to default language columns
+- [ ] Configuration added to params
+- [ ] Models extend `LingoActiveRecord`
+- [ ] `find()` method overridden in models
+- [ ] Controllers updated to use `getAttribute()`/`setAttribute()`
+- [ ] Views updated to use `getAttribute()`
+- [ ] DataProviders changed to `LingoActiveDataProvider`
+- [ ] GridView columns updated
+- [ ] Search models updated (if using)
+- [ ] Tests updated
+- [ ] All functionality tested in both languages
+
+### Gradual Migration Strategy
+
+You can migrate gradually by:
+
+1. **Keep both old and new columns** during transition period
+2. **Migrate model by model** instead of all at once
+3. **Use per-model configuration** to customize behavior:
+
+```php
+'LingoActive' => [
+    // Global defaults
+    \FieldLingo\Adapters\Yii2\LingoActiveRecord::class => [
+        'isStrict' => false,
+        'defaultLanguage' => 'en',
+    ],
+
+    // Already migrated models (strict mode)
+    \app\models\Post::class => [
+        'isStrict' => true,
+    ],
+
+    // Still migrating (very permissive)
+    \app\models\Category::class => [
+        'isStrict' => false,
+        'defaultLanguage' => 'uk',
+    ],
+],
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Problem: `@@field` notation is not working in queries
+
+**Symptoms:** Queries like `Post::find()->where(['@@title' => 'Test'])` fail or `@@title` is treated as literal string.
+
+**Solution:**
+1. Make sure you've overridden the `find()` method in your model:
+```php
+public static function find()
+{
+    return new LingoActiveQuery(get_called_class());
+}
+```
+
+2. Check that you're importing the correct class:
+```php
+use FieldLingo\Adapters\Yii2\LingoActiveQuery;
+```
+
+### Problem: `getAttribute('@@field')` returns null or wrong value
+
+**Possible causes:**
+
+1. **Configuration not loaded**
+   - Check `Yii::$app->params['LingoActive']` is properly configured
+   - Verify config file is being loaded
+
+2. **Column doesn't exist in database**
+   - If `isStrict = true`, you'll get `MissingLocalizedAttributeException`
+   - If `isStrict = false`, library will try fallback language
+   - Check database schema: `SHOW COLUMNS FROM your_table`
+
+3. **Language format mismatch**
+   - Current language: `Yii::$app->language` (e.g., `en-US`, `uk`)
+   - Library uses first part: `en-US` → `en`
+   - Make sure column names match: `title_en`, `title_uk`, etc.
+
+### Problem: GridView sorting not working with localized fields
+
+**Solution:**
+1. Use `LingoActiveDataProvider` instead of `ActiveDataProvider`:
+```php
+use FieldLingo\Adapters\Yii2\LingoActiveDataProvider;
+
+$dataProvider = new LingoActiveDataProvider([
+    'query' => Post::find(),
+]);
+```
+
+2. Configure sort attributes with `@@` notation:
+```php
+'sort' => [
+    'attributes' => ['id', '@@title', '@@category'],
+],
+```
+
+### Problem: How to check if Field-lingo is working correctly?
+
+**Quick test:**
+
+```php
+// 1. Check current language
+echo Yii::$app->language; // e.g., "uk" or "en-US"
+
+// 2. Check config
+print_r(Yii::$app->params['LingoActive']);
+
+// 3. Test attribute resolution
+$post = Post::findOne(1);
+echo $post->getAttribute('@@title'); // Should return title_uk or title_en
+
+// 4. Check what column was actually used
+$query = Post::find()->select(['@@title']);
+echo $query->createCommand()->getRawSql();
+// Should show: SELECT `title_uk` FROM `post` or similar
+```
+
+### Problem: Exception "MissingLocalizedAttributeException"
+
+**Cause:** `isStrict = true` and requested localized column doesn't exist in the table.
+
+**Solutions:**
+
+1. **Add missing column to database:**
+```sql
+ALTER TABLE post ADD COLUMN title_ru VARCHAR(255);
+```
+
+2. **Use fallback mode (non-strict):**
+```php
+'LingoActive' => [
+    \FieldLingo\Adapters\Yii2\LingoActiveRecord::class => [
+        'isStrict' => false,  // Enable fallback to defaultLanguage
+        'defaultLanguage' => 'en',
+    ],
+],
+```
+
+3. **Add only columns you need:**
+   - If you only support English and Ukrainian, only create `*_en` and `*_uk` columns
+   - Set `defaultLanguage` to one you always have
+
+### Problem: Getting "Unknown column" SQL error
+
+**Cause:** Query uses `@@field` but it wasn't converted to actual column name.
+
+**Check:**
+1. Model extends `LingoActiveRecord`
+2. Query uses `LingoActiveQuery` (via overridden `find()`)
+3. DataProvider uses `LingoActiveDataProvider`
+4. Column actually exists in database
+
+### FAQ
+
+**Q: Can I use multiple prefixes like `@@` and `##`?**
+
+A: Yes! Configure as array:
+```php
+'localizedPrefixes' => ['@@', '##'],
+```
+
+**Q: Can I change the language dynamically during runtime?**
+
+A: Yes, Field-lingo reads `Yii::$app->language` on each call:
+```php
+Yii::$app->language = 'en';
+echo $post->getAttribute('@@title'); // Returns title_en
+
+Yii::$app->language = 'uk';
+echo $post->getAttribute('@@title'); // Returns title_uk
+```
+
+**Q: Does Field-lingo work with relations?**
+
+A: Yes, as long as related models also extend `LingoActiveRecord`:
+```php
+$post = Post::find()->with('category')->one();
+echo $post->category->getAttribute('@@name'); // Works!
+```
+
+**Q: Can I use this in forms and validation?**
+
+A: Yes, but reference actual column names in rules:
+```php
+public function rules()
+{
+    return [
+        [['title_en', 'title_uk'], 'required'],
+        [['content_en', 'content_uk'], 'string'],
+    ];
+}
+```
+
+In forms, you can use `@@` notation for display:
+```php
+<?= $form->field($model, 'title_' . Yii::$app->language)->textInput() ?>
+// Or use getAttribute/setAttribute in controller
+```
 
 ---
 
