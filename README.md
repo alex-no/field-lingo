@@ -29,15 +29,15 @@ Primary goals:
 
 ## 🧩 Key classes
 
-- **`\AlexNo\FieldLingo\Adapters\Yii2\LingoActiveRecord`**
+- **`\FieldLingo\Adapters\Yii2\LingoActiveRecord`**
    - Extends `yii\db\ActiveRecord`.
    - Used when working with model attributes (reads/writes, forms, `toArray()`).
 
-- **`\AlexNo\FieldLingo\Adapters\Yii2\LingoActiveQuery`**
+- **`\FieldLingo\Adapters\Yii2\LingoActiveQuery`**
    - Extends `yii\db\ActiveQuery`.
    - Used to transform field names in conditions, `select()` lists, and custom textual SQL logic within the query layer.
 
-- **`\AlexNo\FieldLingo\Adapters\Yii2\LingoActiveDataProvider`**
+- **`\FieldLingo\Adapters\Yii2\LingoActiveDataProvider`**
    - Extends `yii\data\ActiveDataProvider` (or `yii\db\ActiveDataProvider` depending on implementation).
    - Used for operations that require field translation in the data provider level (for example sorting, pagination where attribute names are passed externally).
 
@@ -83,12 +83,12 @@ Add to `params` (or any config area) the LingoActive section (example):
 'params' => [
     'LingoActive' => [
         // Global defaults for adapters
-        \AlexNo\Fieldlingo\Adapters\Yii2\LingoActiveRecord::class => [
+        \FieldLingo\Adapters\Yii2\LingoActiveRecord::class => [
             'localizedPrefixes' => '@@',   // or ['@@', '##']
             'isStrict' => true,            // throw on missing localized attribute
             'defaultLanguage' => 'en',     // fallback language code
         ],
-        \AlexNo\Fieldlingo\Adapters\Yii2\LingoActiveQuery::class => [
+        \FieldLingo\Adapters\Yii2\LingoActiveQuery::class => [
             'localizedPrefixes' => '@@',
         ],
         // Optional per-model override example:
@@ -137,7 +137,7 @@ You can call `$this->convertLocalizedFields([ ... ])` to map arrays of fields at
 
 When using `LingoActiveRecord`, you can reference localized attributes directly in code:
 ```php
-use AlexNo\FieldLingo\Adapters\Yii2\LingoActiveRecord;
+use FieldLingo\Adapters\Yii2\LingoActiveRecord;
 
 
 class Post extends LingoActiveRecord
@@ -178,7 +178,7 @@ $rows = Post::find()
 `ActiveDataProvider` class is helpful when you expose sorting/filtering to external requests and need to map `@@` tokens to real DB columns.
 
 ```php
-$dataProvider = new \AlexNo\FieldLingo\Adapters\Yii2\LingoActiveDataProvider([
+$dataProvider = new \FieldLingo\Adapters\Yii2\LingoActiveDataProvider([
 'query' => Post::find(),
 ]);
 
@@ -258,7 +258,7 @@ field-lingo/
 
 ## Examples
 
-See `examples/yii2/sample-model.php` and `examples/yii2/sample-query.php` for short, runnable examples.
+See `examples/Yii2/sample-model.php` and `examples/Yii2/sample-query.php` for short, runnable examples.
 
 ## 🧪 Testing
 

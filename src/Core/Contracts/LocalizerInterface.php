@@ -2,15 +2,15 @@
 declare(strict_types=1);
 /**
  * @file LocalizerInterface.php - Contract for Localizer service.
- * This file is part of LanguageDetector package.
+ * This file is part of FieldLingo package.
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  * @license MIT
- * @package LanguageDetector\Core
+ * @package FieldLingo\Core
  * @author  Oleksandr Nosov <alex@4n.com.ua>
  * @copyright 2025 Oleksandr Nosov
  */
-namespace AlexNo\FieldLingo\Core\Contracts;
+namespace FieldLingo\Core\Contracts;
 
 /**
  * Interface LocalizerInterface

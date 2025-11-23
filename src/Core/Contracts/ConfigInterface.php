@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace AlexNo\FieldLingo\Core\Contracts;
+namespace FieldLingo\Core\Contracts;
 
 /**
  * Interface ConfigInterface

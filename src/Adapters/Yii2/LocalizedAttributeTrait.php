@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace AlexNo\FieldLingo\Adapters\Yii2;
+namespace FieldLingo\Adapters\Yii2;
 /**
  * Trait LocalizedAttributeTrait
  * @file LocalizedAttributeTrait.php - Trait for localized attribute name handling.
@@ -17,11 +17,11 @@ namespace AlexNo\FieldLingo\Adapters\Yii2;
  * keyed by either the concrete model class (if $this->modelClass exists) or by the
  * adapter class name using self::class.
  *
- * This file is part of LanguageDetector package.
+ * This file is part of FieldLingo package.
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  * @license MIT
- * @package LanguageDetector\Adapters\Yii2
+ * @package FieldLingo\Adapters\Yii2
  * @author  Oleksandr Nosov <alex@4n.com.ua>
  * @copyright 2025 Oleksandr Nosov
  * @since 1.0.0

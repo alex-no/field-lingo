@@ -1,17 +1,17 @@
 <?php
 declare(strict_types=1);
 
-namespace AlexNo\FieldLingo\Adapters\Yii2;
+namespace FieldLingo\Adapters\Yii2;
 /**
  * @file LingoActiveQuery.php - ActiveQuery supporting localized attribute names.
  * Class LingoActiveQuery
  *
  * ActiveQuery extension that localizes columns/conditions/order/group keys before passing them to parent.
- * This file is part of LanguageDetector package.
+ * This file is part of FieldLingo package.
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  * @license MIT
- * @package LanguageDetector\Adapters\Yii2
+ * @package FieldLingo\Adapters\Yii2
  * @author  Oleksandr Nosov <alex@4n.com.ua>
  * @copyright 2025 Oleksandr Nosov
  * @since 1.0.0
@@ -117,7 +117,7 @@ class LingoActiveQuery extends ActiveQuery
      * Convert columns (string or array) to localized equivalents.
      *
      * @param string|array $columns
-     * @return array|string
+     * @return array
      */
     protected function localizeColumns($columns): array
     {
@@ -141,7 +141,7 @@ class LingoActiveQuery extends ActiveQuery
      * Convert orderBy-style columns (can include ASC/DESC).
      *
      * @param string|array $columns
-     * @return array|string
+     * @return array
      */
     protected function localizeOrderColumns($columns): array
     {

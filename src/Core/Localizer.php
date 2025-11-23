@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace AlexNo\FieldLingo\Core;
+namespace FieldLingo\Core;
 /**
  * Class Localizer
  * Framework-agnostic service that converts structured localized attribute names
@@ -14,9 +14,8 @@ namespace AlexNo\FieldLingo\Core;
  * @copyright 2025 Oleksandr Nosov
  * @since 1.0.0
  */
-use AlexNo\FieldLingo\Core\Contracts\ConfigInterface;
-use AlexNo\FieldLingo\Core\Contracts\LocalizerInterface;
-use AlexNo\FieldLingo\Adapters\Yii2\MissingLocalizedAttributeException;
+use FieldLingo\Core\Contracts\ConfigInterface;
+use FieldLingo\Core\Contracts\LocalizerInterface;
 use Yii;
 
 /**

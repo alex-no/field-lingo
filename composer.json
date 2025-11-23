@@ -19,16 +19,20 @@
   },
   "autoload": {
     "psr-4": {
-      "AlexNo\\FieldLingo\\": "src/"
+      "FieldLingo\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "AlexNo\\FieldLingo\\Tests\\": "tests/"
+      "FieldLingo\\Tests\\": "tests/"
     }
   },
   "require-dev": {
     "phpunit/phpunit": "^9.5 || ^10"
+  },
+  "scripts": {
+    "test": "phpunit",
+    "test-coverage": "phpunit --coverage-html coverage"
   },
   "minimum-stability": "stable",
   "prefer-stable": true,

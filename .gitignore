@@ -9,7 +9,14 @@ composer.lock
 
 # IDE and OS
 .vscode/
+.idea/
 Thumbs.db
+.DS_Store
+
+# Testing
+/coverage/
+.phpunit.cache/
+.phpunit.result.cache
 
 # Node (for tools)
 package-lock.json
