@@ -1,34 +1,30 @@
 <?php
 declare(strict_types=1);
 
-namespace FieldLingo\Adapters\Yii2;
+namespace FieldLingo\Adapters\Laravel;
+
 /**
  * Trait LocalizedAttributeTrait
- * @file LocalizedAttributeTrait.php - Trait for localized attribute name handling.
  *
- * Trait for localized attribute name handling for Yii2 ActiveRecord/ActiveQuery adapters.
+ * Trait for localized attribute name handling for Laravel Eloquent models.
  *
- * Configurable properties (can be overridden via component config or per-model):
+ * Configurable properties (can be overridden via config or per-model):
  *  - public string|array $localizedPrefixes = '@@';
  *  - public bool $isStrict = true;
  *  - public string $defaultLanguage = 'en';
  *
- * The trait will attempt to read global defaults from Yii::$app->params['LingoActive']
- * keyed by either the concrete model class (if $this->modelClass exists) or by the
- * adapter class name using self::class.
+ * The trait will attempt to read global defaults from config('field-lingo')
+ * keyed by either the concrete model class or by 'default'.
  *
  * This file is part of FieldLingo package.
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
+ *
+ * @package FieldLingo\Adapters\Laravel
  * @license MIT
- * @package FieldLingo\Adapters\Yii2
  * @author  Oleksandr Nosov <alex@4n.com.ua>
  * @copyright 2025 Oleksandr Nosov
  * @since 1.0.0
- */
-use Yii;
-
-/**
  */
 trait LocalizedAttributeTrait
 {
@@ -52,31 +48,22 @@ trait LocalizedAttributeTrait
      */
     public string $defaultLanguage = 'en';
 
-
     /**
      * Initialize localized settings from global configuration.
-     *
-     * Called by classes that use this trait if they call parent::init() or call this init explicitly.
+     * Called during model boot.
      *
      * @return void
      */
-    public function init(): void
+    protected function initializeLocalizedAttributeTrait(): void
     {
-        // If the using class has parent::init, call it (same pattern as in original).
-        if (is_callable('parent::init')) {
-            parent::init();
-        }
+        $config = config('field-lingo', []);
 
-        $globalConfig = Yii::$app->params['LingoActive'] ?? [];
-        // Prefer per-model override when available (common pattern for Query/Record adapters)
-        $class = isset($this->modelClass) ? $this->modelClass : static::class;
-        $baseClass = self::class;
+        // Prefer per-model override when available
+        $modelClass = static::class;
+        $settings = $config[$modelClass] ?? ($config['default'] ?? []);
 
-        $config = $globalConfig[$class] ?? ($globalConfig[$baseClass] ?? []);
-
-        if (is_array($config)) {
-            foreach ($config as $key => $value) {
-                // Only set known properties
+        if (is_array($settings)) {
+            foreach ($settings as $key => $value) {
                 if (property_exists($this, $key)) {
                     $this->$key = $value;
                 }
@@ -103,14 +90,12 @@ trait LocalizedAttributeTrait
      *
      * Behavior:
      *  - if $name does not start with any configured prefix — returns $name unchanged.
-     *  - determines current language from Yii::$app->language (first part before _ or -).
+     *  - determines current language from app()->getLocale() (first part before _ or -).
      *  - forms candidate: {base}_{lang}
-     *  - if method hasAttribute exists:
+     *  - if method hasColumn exists (Laravel's Schema):
      *      - if candidate exists => return it
      *      - else if isStrict => throw MissingLocalizedAttributeException
      *      - else try fallback {base}_{defaultLanguage} and if exists return it, otherwise return candidate
-     *  - if hasAttribute doesn't exist (cannot check) — return candidate (or fallback candidate when not prefixed)
-     *  - if isStrict and cannot check existence — returns candidate anyway (caller may validate)
      *
      * @param string $name
      * @return string
@@ -122,33 +107,30 @@ trait LocalizedAttributeTrait
             if ($prefix !== '' && str_starts_with($name, $prefix)) {
                 $base = substr($name, strlen($prefix));
 
-                $lang = Yii::$app->language ?? null;
+                $lang = app()->getLocale();
                 $lang = (is_string($lang) && $lang !== '')
                     ? strtolower(preg_split('/[_-]/', $lang)[0])
                     : $this->defaultLanguage;
 
                 $candidate = "{$base}_{$lang}";
 
-                // If we can check attributes, prefer that
-                if (method_exists($this, 'hasAttribute')) {
-                    // attribute exists: return it
-                    if ($this->hasAttribute($candidate)) {
-                        return $candidate;
-                    }
-
-                    // attribute not found
-                    if ($this->isStrict) {
-                        throw new MissingLocalizedAttributeException($candidate);
-                    }
-
-                    // Non-strict: try fallback language only if different
-                    $fallback = "{$base}_{$this->defaultLanguage}";
-                    if ($this->defaultLanguage !== $lang && $this->hasAttribute($fallback)) {
-                        return $fallback;
-                    }
+                // Check if column exists in model's table
+                if ($this->hasColumn($candidate)) {
+                    return $candidate;
                 }
 
-                // If attribute existence cannot be checked or fallback not found, return the original candidate
+                // attribute not found
+                if ($this->isStrict) {
+                    throw new MissingLocalizedAttributeException($candidate);
+                }
+
+                // Non-strict: try fallback language only if different
+                $fallback = "{$base}_{$this->defaultLanguage}";
+                if ($this->defaultLanguage !== $lang && $this->hasColumn($fallback)) {
+                    return $fallback;
+                }
+
+                // Return the original candidate (let DB handle if it doesn't exist)
                 return $candidate;
             }
         }
@@ -157,7 +139,31 @@ trait LocalizedAttributeTrait
     }
 
     /**
-     * Convert array of field names used in toArray/select into localized equivalents.
+     * Check if a column exists in the model's table.
+     *
+     * @param string $column
+     * @return bool
+     */
+    protected function hasColumn(string $column): bool
+    {
+        // Check in model's attributes first (for existing instances)
+        if (array_key_exists($column, $this->attributes ?? [])) {
+            return true;
+        }
+
+        // More robust: check if column is in model's known attributes
+        // This works after model is loaded from DB
+        try {
+            return method_exists($this, 'getConnection')
+                && $this->getConnection()->getSchemaBuilder()->hasColumn($this->getTable(), $column);
+        } catch (\Throwable) {
+            // If we can't check, assume it doesn't exist (for query building)
+            return false;
+        }
+    }
+
+    /**
+     * Convert array of field names into localized equivalents.
      *
      * @param array $fields
      * @return array

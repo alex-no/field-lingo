@@ -105,11 +105,10 @@ class Localizer implements LocalizerInterface
                 $lang = Yii::$app->language ?? null;
                 if (is_string($lang) && $lang !== '') {
                     // normalize to two-letter code if possible (e.g. 'en-US' → 'en')
-                    $parts = preg_split('/[_-]/', $lang);
-                    return strtolower($parts[0]);
+                    return strtolower(preg_split('/[_-]/', $lang)[0]);
                 }
             }
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             // ignore — will fallback to default language
         }
 

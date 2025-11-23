@@ -203,20 +203,11 @@ class LingoActiveQuery extends ActiveQuery
      */
     protected function stringToArray($columns): array
     {
-        if (is_string($columns)) {
-            // split by commas for simple lists
-            $parts = preg_split('/\s*,\s*/', trim($columns));
-            return $parts ?: [];
-        }
-
-        if ($columns === null) {
-            return [];
-        }
-
-        if (!is_array($columns)) {
-            return [$columns];
-        }
-
-        return $columns;
+        return match(true) {
+            is_string($columns) => preg_split('/\s*,\s*/', trim($columns)) ?: [],
+            $columns === null => [],
+            is_array($columns) => $columns,
+            default => [$columns],
+        };
     }
 }
