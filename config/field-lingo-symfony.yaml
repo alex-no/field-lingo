@@ -1,0 +1,53 @@
+# FieldLingo configuration for Symfony
+#
+# This file shows how to configure FieldLingo in your Symfony application.
+# Copy this to config/packages/field_lingo.yaml
+
+parameters:
+    # Global FieldLingo configuration
+    field_lingo:
+        # Default settings for all entities
+        default:
+            localizedPrefixes: ['@@']  # Prefixes to identify localized fields
+            isStrict: true              # Throw exception if localized field not found
+            defaultLanguage: 'en'       # Fallback language
+
+        # Per-entity configuration (optional)
+        # Override settings for specific entities
+        'App\Entity\Product':
+            localizedPrefixes: ['@@', '##']
+            isStrict: false
+            defaultLanguage: 'en'
+
+        'App\Entity\Category':
+            localizedPrefixes: ['@@']
+            isStrict: true
+            defaultLanguage: 'uk'
+
+# Example service configuration for custom repositories
+services:
+    # Auto-configure repositories
+    App\Repository\:
+        resource: '../src/Repository/*'
+        tags: ['doctrine.repository_service']
+
+    # If you need to inject ParameterBag into entities (optional)
+    # You can use a factory or event subscriber
+    App\EventSubscriber\LocalizedEntitySubscriber:
+        arguments:
+            $parameterBag: '@parameter_bag'
+        tags:
+            - { name: doctrine.event_subscriber }
+
+# Alternative: Using environment variables for configuration
+# parameters:
+#     field_lingo:
+#         default:
+#             localizedPrefixes: '%env(json:FIELD_LINGO_PREFIXES)%'
+#             isStrict: '%env(bool:FIELD_LINGO_STRICT)%'
+#             defaultLanguage: '%env(FIELD_LINGO_DEFAULT_LANG)%'
+#
+# Then in your .env:
+# FIELD_LINGO_PREFIXES=["@@","##"]
+# FIELD_LINGO_STRICT=true
+# FIELD_LINGO_DEFAULT_LANG=en

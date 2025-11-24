@@ -1,8 +1,8 @@
 {
   "name": "alex-no/field-lingo",
-  "description": "Field-lingo — lightweight library to map structured multi-language column names (e.g. @@name) to localized DB columns, with Yii2 integration and framework-agnostic core.",
+  "description": "Field-lingo — lightweight library to map structured multi-language column names (e.g. @@name) to localized DB columns, with Yii2, Laravel, and Symfony integration and framework-agnostic core.",
   "type": "library",
-  "keywords": ["i18n", "yii2", "multilingual", "database", "localized", "columns", "fields"],
+  "keywords": ["i18n", "yii2", "laravel", "symfony", "multilingual", "database", "localized", "columns", "fields", "doctrine"],
   "license": "MIT",
   "authors": [
     {
@@ -11,11 +11,23 @@
     }
   ],
   "require": {
-    "php": ">=8.1",
-    "yiisoft/yii2": "^2.0"
+    "php": ">=8.2"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5 || ^10",
+    "yiisoft/yii2": "^2.0",
+    "illuminate/database": "^9.0 || ^10.0 || ^11.0",
+    "illuminate/support": "^9.0 || ^10.0 || ^11.0",
+    "symfony/http-foundation": "^5.4 || ^6.0 || ^7.0",
+    "symfony/dependency-injection": "^5.4 || ^6.0 || ^7.0",
+    "doctrine/orm": "^2.10 || ^3.0"
   },
   "suggest": {
-    "alex-no/language-detector": "Recommended for detecting user language automatically; requires its own configuration."
+    "alex-no/language-detector": "Recommended for detecting user language automatically; requires its own configuration.",
+    "yiisoft/yii2": "Required for using Yii2 adapter",
+    "illuminate/database": "Required for using Laravel adapter",
+    "symfony/http-foundation": "Required for using Symfony adapter",
+    "doctrine/orm": "Required for using Symfony/Doctrine adapter"
   },
   "autoload": {
     "psr-4": {
@@ -24,11 +36,9 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "FieldLingo\\Tests\\": "tests/"
+      "FieldLingo\\Tests\\": "tests/",
+      "App\\": "examples/"
     }
-  },
-  "require-dev": {
-    "phpunit/phpunit": "^9.5 || ^10"
   },
   "scripts": {
     "test": "phpunit",

@@ -8,7 +8,11 @@
 **Field-lingo** — lightweight library to easily work with database columns that store multiple language versions of the same attribute in one row (e.g. `name_en`, `name_uk`, `name_ru`).
 It provides a simple, consistent mechanism to reference "structured localized attribute names" (like `@@name`) and transparently map them to the actual column `name_<lang>` according to current language settings.
 
-This repository currently contains a full integration for **Yii2** (ActiveRecord / ActiveQuery / DataProvider) under `src/Adapters/Yii2` and a framework-agnostic core in `src/Core` for future adapters.
+This repository contains full integrations for:
+- **Yii2** (ActiveRecord / ActiveQuery / DataProvider) — `src/Adapters/Yii2`
+- **Laravel** (Eloquent Models / Query Builder) — `src/Adapters/Laravel`
+- **Symfony** (Doctrine Entities / Repositories / QueryBuilder) — `src/Adapters/Symfony`
+- **Framework-agnostic core** — `src/Core` for custom implementations
 
 ---
 
@@ -17,7 +21,11 @@ This repository currently contains a full integration for **Yii2** (ActiveRecord
 - [Overview](#-overview)
 - [Requirements](#-requirements)
 - [Key Classes](#-key-classes)
-- [Quick Start (Yii2)](#️-quick-start-yii2)
+- [Quick Start](#-quick-start)
+  - [Yii2](#yii2)
+  - [Laravel](#laravel)
+  - [Symfony](#symfony)
+- [Detailed Usage (Yii2)](#️-detailed-usage-yii2)
   - [Install](#install)
   - [Optional Recommendation](#optional-recommendation)
   - [Basic Idea](#basic-idea)
@@ -62,8 +70,13 @@ Primary goals:
 
 ## 📦 Requirements
 
-- **PHP**: >= 8.0
-- **Yii2**: ^2.0
+- **PHP**: >= 8.2
+
+**Framework-specific requirements:**
+- **Yii2**: ^2.0 (for Yii2 adapter)
+- **Laravel**: ^9.0 || ^10.0 || ^11.0 (for Laravel adapter)
+- **Symfony**: ^5.4 || ^6.0 || ^7.0 (for Symfony adapter)
+- **Doctrine ORM**: ^2.10 || ^3.0 (for Symfony/Doctrine adapter)
 
 **Optional but recommended:**
 - [alex-no/language-detector](https://packagist.org/packages/alex-no/language-detector) — for automatic user language detection (requires separate configuration)
@@ -88,9 +101,19 @@ These adapters rely on a shared trait `LocalizedAttributeTrait` which performs t
 
 ---
 
-## ⚙️ Quick start (Yii2)
+## ⚙️ Quick Start
 
-### Install
+### Installation
+
+```bash
+composer require alex-no/field-lingo
+```
+
+Choose your framework adapter:
+
+### Yii2
+
+#### 1. Install
 
 ```bash
 composer require alex-no/field-lingo
@@ -156,6 +179,99 @@ Main options:
  - `isStrict (bool)` — if true throw when localized column missing; if `false` fallback to `defaultLanguage`.
 
 These options may be set globally, per-class (LingoActiveRecord / LingoActiveQuery) or per-model.
+
+### Laravel
+
+#### 1. Extend your Eloquent models
+
+```php
+use FieldLingo\Adapters\Laravel\LingoModel;
+
+class Product extends LingoModel
+{
+    protected $table = 'products';
+
+    protected $fillable = ['name_en', 'name_uk', 'description_en', 'description_uk', 'price'];
+}
+```
+
+#### 2. Use localized attributes
+
+```php
+// Create
+$product = new Product();
+$product->setAttribute('@@name', 'Laptop');
+$product->setAttribute('@@description', 'High-performance laptop');
+$product->save();
+
+// Read
+echo $product->getAttribute('@@name');
+
+// Query
+$products = Product::where('@@name', 'LIKE', '%Laptop%')
+    ->orderBy('@@name', 'asc')
+    ->get();
+```
+
+**See [examples/Laravel/](examples/Laravel/) for complete examples.**
+
+### Symfony
+
+#### 1. Extend your Doctrine entities
+
+```php
+use FieldLingo\Adapters\Symfony\LingoEntity;
+use Doctrine\ORM\Mapping as ORM;
+
+#[ORM\Entity(repositoryClass: ProductRepository::class)]
+class Product extends LingoEntity
+{
+    #[ORM\Column(type: 'string')]
+    private ?string $name_en = null;
+
+    #[ORM\Column(type: 'string', nullable: true)]
+    private ?string $name_uk = null;
+
+    // Getters and setters...
+}
+```
+
+#### 2. Create repository
+
+```php
+use FieldLingo\Adapters\Symfony\LingoRepository;
+
+class ProductRepository extends LingoRepository
+{
+    public function findByName(string $name, string $locale = 'en'): array
+    {
+        return $this->setLocale($locale)
+            ->createQueryBuilder('p')
+            ->where('p.@@name LIKE :name')
+            ->setParameter('name', '%' . $name . '%')
+            ->getQuery()
+            ->getResult();
+    }
+}
+```
+
+#### 3. Use in controllers
+
+```php
+$product = new Product();
+$product->setCurrentLocale($request->getLocale());
+$product->{'@@name'} = 'Laptop';
+$product->{'@@description'} = 'High-performance laptop';
+
+$entityManager->persist($product);
+$entityManager->flush();
+```
+
+**See [examples/Symfony/](examples/Symfony/) for complete examples and configuration.**
+
+---
+
+## ⚙️ Detailed Usage (Yii2)
 
 ---
 
@@ -913,10 +1029,21 @@ field-lingo/
 │  │     ├─ LocalizerInterface.php
 │  │     └─ ConfigInterface.php
 │  └── Adapters/
-│      └─ Yii2/
-│         ├─ LingoActiveRecord.php
-│         ├─ LingoActiveQuery.php
-│         ├─ LingoActiveDataProvider.php
+│      ├─ Yii2/
+│      │  ├─ LingoActiveRecord.php
+│      │  ├─ LingoActiveQuery.php
+│      │  ├─ LingoActiveDataProvider.php
+│      │  ├─ LocalizedAttributeTrait.php
+│      │  └─ MissingLocalizedAttributeException.php
+│      ├─ Laravel/
+│      │  ├─ LingoModel.php
+│      │  ├─ LingoBuilder.php
+│      │  ├─ LocalizedAttributeTrait.php
+│      │  └─ MissingLocalizedAttributeException.php
+│      └─ Symfony/
+│         ├─ LingoEntity.php
+│         ├─ LingoRepository.php
+│         ├─ LingoQueryBuilder.php
 │         ├─ LocalizedAttributeTrait.php
 │         └─ MissingLocalizedAttributeException.php
 ├─ tests/
@@ -925,14 +1052,22 @@ field-lingo/
 │  │  └─ TraitTest.php
 │  └─ bootstrap.php
 ├─ examples/
-│  ├─ yii2/
+│  ├─ Yii2/
 │  │  ├─ sample-model.php
 │  │  └─ sample-query.php
+│  ├─ Laravel/
+│  │  ├─ sample-model.php
+│  │  └─ sample-usage.php
+│  ├─ Symfony/
+│  │  ├─ Product.php
+│  │  ├─ ProductRepository.php
+│  │  ├─ usage-example.php
+│  │  └─ README.md
 │  └─ plain-php/
 │      └─ usage.php
-├─ scripts/
-│  └─ ci/
-│      └─ run-tests.sh
+├─ config/
+│  ├─ field-lingo.php (Laravel config example)
+│  └─ field-lingo-symfony.yaml (Symfony config example)
 ├─ .gitignore
 ├─ LICENSE
 ├─ README.md
@@ -941,7 +1076,9 @@ field-lingo/
 
 ## Examples
 
-See `examples/Yii2/sample-model.php` and `examples/Yii2/sample-query.php` for short, runnable examples.
+- **Yii2**: See `examples/Yii2/` for ActiveRecord and ActiveQuery examples
+- **Laravel**: See `examples/Laravel/` for Eloquent model and query examples
+- **Symfony**: See `examples/Symfony/` for Doctrine entity and repository examples with detailed README
 
 ## 🧪 Testing
 
@@ -974,8 +1111,8 @@ Please follow PSR-12 and add PHPDoc (English) for public APIs.
 
 - ✅ Core mapping logic.
 - ✅ Yii2 integration (ActiveRecord, ActiveQuery, DataProvider).
-- ⏳ Laravel Eloquent adapter.
-- ⏳ Doctrine/QueryBuilder adapter.
+- ✅ Laravel Eloquent adapter (Models, Query Builder).
+- ✅ Symfony/Doctrine adapter (Entities, Repositories, QueryBuilder).
 - 🧩 Advanced column patterns: nested access, JSON, relation-aware localization.
 - 💡 Optionally store translation meta in separate table(s) as alternative mode.
 
