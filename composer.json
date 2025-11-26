@@ -1,8 +1,8 @@
 {
   "name": "alex-no/field-lingo",
-  "description": "Field-lingo — lightweight library to map structured multi-language column names (e.g. @@name) to localized DB columns, with Yii2, Laravel, and Symfony integration and framework-agnostic core.",
+  "description": "Field-lingo — lightweight library to map structured multi-language column names (e.g. @@name) to localized DB columns, with Yii2, Yii3, Laravel, and Symfony integration and framework-agnostic core.",
   "type": "library",
-  "keywords": ["i18n", "yii2", "laravel", "symfony", "multilingual", "database", "localized", "columns", "fields", "doctrine"],
+  "keywords": ["i18n", "yii2", "yii3", "laravel", "symfony", "multilingual", "database", "localized", "columns", "fields", "doctrine"],
   "license": "MIT",
   "authors": [
     {
@@ -16,6 +16,8 @@
   "require-dev": {
     "phpunit/phpunit": "^9.5 || ^10",
     "yiisoft/yii2": "^2.0",
+    "yiisoft/active-record": "^3.0",
+    "yiisoft/translator": "^3.0",
     "illuminate/database": "^9.0 || ^10.0 || ^11.0",
     "illuminate/support": "^9.0 || ^10.0 || ^11.0",
     "symfony/http-foundation": "^5.4 || ^6.0 || ^7.0",
@@ -25,6 +27,8 @@
   "suggest": {
     "alex-no/language-detector": "Recommended for detecting user language automatically; requires its own configuration.",
     "yiisoft/yii2": "Required for using Yii2 adapter",
+    "yiisoft/active-record": "Required for using Yii3 adapter",
+    "yiisoft/translator": "Optional for Yii3 adapter - enables automatic locale detection from translator service",
     "illuminate/database": "Required for using Laravel adapter",
     "symfony/http-foundation": "Required for using Symfony adapter",
     "doctrine/orm": "Required for using Symfony/Doctrine adapter"

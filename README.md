@@ -10,6 +10,7 @@ It provides a simple, consistent mechanism to reference "structured localized at
 
 This repository contains full integrations for:
 - **Yii2** (ActiveRecord / ActiveQuery / DataProvider) — `src/Adapters/Yii2`
+- **Yii3** (ActiveRecord / ActiveQuery) — `src/Adapters/Yii3`
 - **Laravel** (Eloquent Models / Query Builder) — `src/Adapters/Laravel`
 - **Symfony** (Doctrine Entities / Repositories / QueryBuilder) — `src/Adapters/Symfony`
 - **Framework-agnostic core** — `src/Core` for custom implementations
@@ -23,6 +24,7 @@ This repository contains full integrations for:
 - [Key Classes](#-key-classes)
 - [Quick Start](#-quick-start)
   - [Yii2](#yii2)
+  - [Yii3](#yii3)
   - [Laravel](#laravel)
   - [Symfony](#symfony)
 - [Detailed Usage (Yii2)](#️-detailed-usage-yii2)
@@ -74,6 +76,7 @@ Primary goals:
 
 **Framework-specific requirements:**
 - **Yii2**: ^2.0 (for Yii2 adapter)
+- **Yii3**: ^3.0 (yiisoft/active-record ^3.0, optional: yiisoft/translator ^3.0)
 - **Laravel**: ^9.0 || ^10.0 || ^11.0 (for Laravel adapter)
 - **Symfony**: ^5.4 || ^6.0 || ^7.0 (for Symfony adapter)
 - **Doctrine ORM**: ^2.10 || ^3.0 (for Symfony/Doctrine adapter)
@@ -179,6 +182,87 @@ Main options:
  - `isStrict (bool)` — if true throw when localized column missing; if `false` fallback to `defaultLanguage`.
 
 These options may be set globally, per-class (LingoActiveRecord / LingoActiveQuery) or per-model.
+
+### Yii3
+
+#### 1. Install
+
+```bash
+composer require alex-no/field-lingo
+composer require yiisoft/active-record
+```
+
+#### 2. Extend your models
+
+```php
+use FieldLingo\Adapters\Yii3\LingoActiveRecord;
+use FieldLingo\Adapters\Yii3\LingoActiveQuery;
+
+class Post extends LingoActiveRecord
+{
+    public static function tableName(): string
+    {
+        return '{{%post}}';
+    }
+
+    /**
+     * IMPORTANT: Override find() to return LingoActiveQuery
+     */
+    public static function find(): LingoActiveQuery
+    {
+        return new LingoActiveQuery(static::class);
+    }
+}
+```
+
+#### 3. Use localized attributes
+
+```php
+// Create
+$post = new Post();
+$post->setLocale('uk');  // Set current locale
+$post->setAttribute('@@title', 'Новина дня');
+$post->setAttribute('@@content', 'Текст новини');
+$post->save();
+
+// Read
+$post->setLocale('en');
+echo $post->getAttribute('@@title');
+
+// Query
+$posts = Post::find()
+    ->setLocale('uk')
+    ->select(['id', '@@title', '@@content'])
+    ->where(['like', '@@title', 'Новини'])
+    ->orderBy(['@@title' => SORT_ASC])
+    ->all();
+```
+
+#### 4. Optional: Integrate with Translator service
+
+```php
+use Yiisoft\Translator\TranslatorInterface;
+
+// In your DI container configuration
+$container->set(Post::class, function ($container) {
+    $post = new Post();
+    $post->setTranslator($container->get(TranslatorInterface::class));
+    return $post;
+});
+
+// Now locale is automatically taken from translator
+$post = $container->get(Post::class);
+echo $post->getAttribute('@@title'); // Uses translator's current locale
+```
+
+#### Key Differences from Yii2:
+
+- **Explicit locale setting**: Use `setLocale('uk')` instead of relying on `Yii::$app->language`
+- **Translator integration**: Optional integration with `yiisoft/translator` for automatic locale detection
+- **Modern PHP**: Uses PHP 8.2+ type hints and return types
+- **No global state**: Doesn't depend on global application configuration
+
+**See [examples/Yii3/](examples/Yii3/) for complete examples and detailed documentation.**
 
 ### Laravel
 
@@ -1035,6 +1119,11 @@ field-lingo/
 │      │  ├─ LingoActiveDataProvider.php
 │      │  ├─ LocalizedAttributeTrait.php
 │      │  └─ MissingLocalizedAttributeException.php
+│      ├─ Yii3/
+│      │  ├─ LingoActiveRecord.php
+│      │  ├─ LingoActiveQuery.php
+│      │  ├─ LocalizedAttributeTrait.php
+│      │  └─ MissingLocalizedAttributeException.php
 │      ├─ Laravel/
 │      │  ├─ LingoModel.php
 │      │  ├─ LingoBuilder.php
@@ -1055,6 +1144,10 @@ field-lingo/
 │  ├─ Yii2/
 │  │  ├─ sample-model.php
 │  │  └─ sample-query.php
+│  ├─ Yii3/
+│  │  ├─ sample-model.php
+│  │  ├─ sample-usage.php
+│  │  └─ README.md
 │  ├─ Laravel/
 │  │  ├─ sample-model.php
 │  │  └─ sample-usage.php
@@ -1076,9 +1169,10 @@ field-lingo/
 
 ## Examples
 
-- **Yii2**: See `examples/Yii2/` for ActiveRecord and ActiveQuery examples
-- **Laravel**: See `examples/Laravel/` for Eloquent model and query examples
-- **Symfony**: See `examples/Symfony/` for Doctrine entity and repository examples with detailed README
+- **Yii2**: See [examples/Yii2/](examples/Yii2/) for ActiveRecord and ActiveQuery examples
+- **Yii3**: See [examples/Yii3/](examples/Yii3/) for modern Yii3 ActiveRecord examples with Translator integration
+- **Laravel**: See [examples/Laravel/](examples/Laravel/) for Eloquent model and query examples
+- **Symfony**: See [examples/Symfony/](examples/Symfony/) for Doctrine entity and repository examples with detailed README
 
 ## 🧪 Testing
 
@@ -1111,6 +1205,7 @@ Please follow PSR-12 and add PHPDoc (English) for public APIs.
 
 - ✅ Core mapping logic.
 - ✅ Yii2 integration (ActiveRecord, ActiveQuery, DataProvider).
+- ✅ Yii3 integration (ActiveRecord, ActiveQuery with Translator support).
 - ✅ Laravel Eloquent adapter (Models, Query Builder).
 - ✅ Symfony/Doctrine adapter (Entities, Repositories, QueryBuilder).
 - 🧩 Advanced column patterns: nested access, JSON, relation-aware localization.
