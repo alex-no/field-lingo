@@ -42,7 +42,7 @@ abstract class LingoActiveRecord extends ActiveRecord
     /**
      * {@inheritdoc}
      */
-    public function __get($name)
+    public function __get(string $name)
     {
         // If getter exists, call it
         $getter = 'get' . str_replace([' ', '_'], '', ucwords((string)$name, ' _'));
@@ -57,7 +57,7 @@ abstract class LingoActiveRecord extends ActiveRecord
     /**
      * {@inheritdoc}
      */
-    public function __set($name, $value)
+    public function __set(string $name, $value): void
     {
         $setter = 'set' . str_replace([' ', '_'], '', ucwords((string)$name, ' _'));
         if (method_exists($this, $setter)) {

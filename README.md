@@ -236,9 +236,52 @@ $posts = Post::find()
     ->where(['like', '@@title', 'Новини'])
     ->orderBy(['@@title' => SORT_ASC])
     ->all();
+
+// Query with pagination
+$posts = Post::find()
+    ->setLocale('uk')
+    ->select(['id', '@@title', '@@content'])
+    ->where(['like', '@@title', 'Новини'])
+    ->orderBy(['@@title' => SORT_ASC])
+    ->limit(10)
+    ->offset(20)
+    ->all();
+
+// Count records
+$count = Post::find()
+    ->setLocale('uk')
+    ->where(['like', '@@title', 'Новини'])
+    ->count();
 ```
 
-#### 4. Optional: Integrate with Translator service
+#### 4. Database Connection
+
+The compatibility layer uses PDO for database access. You can configure it in two ways:
+
+**1. Via Dependency Injection (recommended):**
+```php
+use Yiisoft\ActiveRecord\ActiveRecord;
+
+// In your DI container
+$container->set(\PDO::class, function() {
+    $dsn = "mysql:host=localhost;dbname=mydb;charset=utf8mb4";
+    return new \PDO($dsn, 'username', 'password');
+});
+
+// Set in your models
+ActiveRecord::setDb($container->get(\PDO::class));
+```
+
+**2. Via Environment Variables:**
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=mydb
+DB_USER=username
+DB_PASSWORD=password
+```
+
+#### 5. Optional: Integrate with Translator service
 
 ```php
 use Yiisoft\Translator\TranslatorInterface;
@@ -254,6 +297,41 @@ $container->set(Post::class, function ($container) {
 $post = $container->get(Post::class);
 echo $post->getAttribute('@@title'); // Uses translator's current locale
 ```
+
+#### 6. Working with Relations
+
+```php
+class Post extends LingoActiveRecord
+{
+    public function getCategory(): ActiveQueryInterface
+    {
+        return $this->hasOne(Category::class, ['id' => 'category_id']);
+    }
+
+    public function getComments(): ActiveQueryInterface
+    {
+        return $this->hasMany(Comment::class, ['post_id' => 'id']);
+    }
+}
+
+// Usage
+$post = Post::findOne(1);
+$post->setLocale('uk');
+echo $post->category->getAttribute('@@name');  // Localized category name
+
+$comments = $post->comments;
+```
+
+#### Compatibility Layer
+
+The Yii3 adapter includes a compatibility layer ([src/Adapters/Yii3/Compatibility/](src/Adapters/Yii3/Compatibility/)) that provides basic ActiveRecord and ActiveQuery functionality using PDO. This layer includes:
+
+- Basic CRUD operations (`findOne()`, `all()`, `one()`, `count()`)
+- Query building (`select()`, `where()`, `orderBy()`, `groupBy()`, `limit()`, `offset()`)
+- Attribute management (`getAttribute()`, `setAttribute()`, magic properties)
+- Simple relations support (`hasMany()`, `hasOne()`)
+
+This compatibility layer is designed to work until Yii3 has an official stable ActiveRecord implementation.
 
 #### Key Differences from Yii2:
 
