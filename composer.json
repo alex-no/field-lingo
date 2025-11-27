@@ -35,7 +35,8 @@
   },
   "autoload": {
     "psr-4": {
-      "FieldLingo\\": "src/"
+      "FieldLingo\\": "src/",
+      "Yiisoft\\ActiveRecord\\": "src/Adapters/Yii3/Compatibility/"
     }
   },
   "autoload-dev": {
